@@ -1,22 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using AutoMindBackend.Data;
+using AutoMindBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- SERVICES registrieren ---
+
+builder.Services.AddScoped<VehicleService>();
+
+builder.Services.AddScoped<TripService>();
+
 builder.Services.AddControllers();
 
-// Swagger aktivieren
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
 
-// DB-Kontext registrieren (SQLite)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=automind.db"));
 
 var app = builder.Build();
 
-// --- PIPELINE konfigurieren ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

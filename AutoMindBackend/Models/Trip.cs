@@ -10,5 +10,4 @@ public class Trip
     public string EndLocation { get; set; } = string.Empty;
 
     public int VehicleId { get; set; }
-
 }
