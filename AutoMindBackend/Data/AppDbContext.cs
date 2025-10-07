@@ -9,4 +9,5 @@ public class AppDbContext : DbContext
         : base(options) { }
 
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+     public DbSet<Trip> Trips => Set<Trip>();
 }
