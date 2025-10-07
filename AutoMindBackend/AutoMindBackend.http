@@ -1,0 +1,6 @@
+@AutoMindBackend_HostAddress = http://localhost:5191
+
+GET {{AutoMindBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
