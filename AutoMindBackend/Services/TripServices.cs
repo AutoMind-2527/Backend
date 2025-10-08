@@ -29,7 +29,6 @@ public class TripService
             .ToList();
     }
 
-    // 🔹 Trip hinzufügen (mit automatischer Berechnung der Dauer und Durchschnittsgeschwindigkeit)
     public Trip Add(Trip trip)
     {
         if (trip.EndTime < trip.StartTime)
@@ -40,7 +39,7 @@ public class TripService
         double durationHours = (trip.EndTime - trip.StartTime).TotalHours;
         double avgSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
 
-        Console.WriteLine($"⏱️ Dauer: {durationHours:F2}h | Ø Geschwindigkeit: {avgSpeed:F1} km/h");
+        Console.WriteLine($" Dauer: {durationHours:F2}h |  Geschwindigkeit: {avgSpeed:F1} km/h");
 
         _context.Trips.Add(trip);
         _context.SaveChanges();
