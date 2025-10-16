@@ -38,4 +38,16 @@ public class VehicleService
         _context.SaveChanges();
         return true;
     }
+
+    public void AddMileage(int vehicleId, double distanceKm)
+    {
+        var vehicle = _context.Vehicles.Find(vehicleId);
+        if (vehicle == null) return;
+
+        vehicle.Mileage += distanceKm;
+        _context.SaveChanges();
+
+        Console.WriteLine($"Fahrzeug {vehicle.LicensePlate}: {distanceKm} km hinzugefügt. Neuer Kilometerstand: {vehicle.Mileage}");
+    }
+
 }

@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<VehicleService>();
 builder.Services.AddScoped<TripService>();
 builder.Services.AddScoped<DataSeeder>();
+builder.Services.AddScoped<GpsService>();
 
 var app = builder.Build();
 
