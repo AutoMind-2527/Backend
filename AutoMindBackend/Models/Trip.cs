@@ -10,4 +10,8 @@ public class Trip
     public string EndLocation { get; set; } = string.Empty;
 
     public int VehicleId { get; set; }
+    
+    public double FuelUsed { get; set; }        
+    public double TripCost { get; set; }        
+    public double AverageSpeed { get; set; }    
 }
