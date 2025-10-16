@@ -30,21 +30,28 @@ public class TripService
     }
 
     public Trip Add(Trip trip)
-    {
-        if (trip.EndTime < trip.StartTime)
-        {
-            throw new Exception("EndTime darf nicht vor StartTime liegen.");
-        }
+    {   
+        var vehicle = _context.Vehicles.Find(trip.VehicleId);
+        if (vehicle == null)
+            throw new Exception("Fahrzeug nicht gefunden.");
 
         double durationHours = (trip.EndTime - trip.StartTime).TotalHours;
-        double avgSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
+        trip.AverageSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
 
-        Console.WriteLine($" Dauer: {durationHours:F2}h |  Geschwindigkeit: {avgSpeed:F1} km/h");
+        //Verbrauch
+        trip.FuelUsed = trip.DistanceKm * (vehicle.FuelConsumption / 100);
+
+        //1.80€ pro Liter
+        double fuelPrice = 1.80;
+        trip.TripCost = trip.FuelUsed * fuelPrice;
 
         _context.Trips.Add(trip);
         _context.SaveChanges();
+
+        Console.WriteLine($"Trip gespeichert: {trip.DistanceKm:F1} km, {trip.FuelUsed:F2} L, {trip.TripCost:F2} €");
         return trip;
     }
+
 
     public bool Delete(int id)
     {
