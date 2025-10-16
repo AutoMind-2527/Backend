@@ -37,6 +37,20 @@ public class TripsController : ControllerBase
         return Ok(trips);
     }
 
+    [HttpGet("stats/{vehicleId}")]
+    public IActionResult GetStats(int vehicleId)
+    {
+        var stats = new
+        {
+            TotalKm = _service.GetTotalDistance(vehicleId),
+            TotalFuel = _service.GetTotalFuelUsed(vehicleId),
+            TotalCost = _service.GetTotalCost(vehicleId),
+            AvgConsumption = _service.GetAverageConsumption(vehicleId)
+        };
+        return Ok(stats);
+    }
+
+
     [HttpPost]
     public IActionResult Create(Trip trip)
     {

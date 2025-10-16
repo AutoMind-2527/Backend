@@ -24,6 +24,8 @@ public class GpsController : ControllerBase
     [HttpGet]
     public IActionResult GetAll()
     {
-        return Ok(_gpsService.GetAll());
+        var gpsData = _gpsService.GetAllGpsData();
+        return Ok(gpsData);
     }
+
 }

@@ -29,6 +29,13 @@ public class VehiclesController : ControllerBase
         return Ok(vehicle);
     }
 
+    [HttpGet("{id}/service-status")]
+    public IActionResult CheckService(int id)
+    {
+        bool needsService = _service.NeedsService(id);
+        return Ok(new { vehicleId = id, needsService });
+    }
+
     [HttpPost]
     public IActionResult Create(Vehicle vehicle)
     {
