@@ -51,14 +51,27 @@ public class TripService
         Console.WriteLine($"Trip gespeichert: {trip.DistanceKm:F1} km, {trip.FuelUsed:F2} L, {trip.TripCost:F2} €");
         return trip;
     }
-    
+
     public double GetTotalDistance(int vehicleId)
     {
         return _context.Trips
             .Where(t => t.VehicleId == vehicleId)
             .Sum(t => t.DistanceKm);
     }
+    
+    public double GetTotalFuelUsed(int vehicleId)
+    {
+        return _context.Trips
+            .Where(t => t.VehicleId == vehicleId)
+            .Sum(t => t.FuelUsed);
+    }
 
+    public double GetTotalCost(int vehicleId)
+    {
+        return _context.Trips
+            .Where(t => t.VehicleId == vehicleId)
+            .Sum(t => t.TripCost);
+    }
 
     public bool Delete(int id)
     {
