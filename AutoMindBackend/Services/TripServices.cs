@@ -73,6 +73,13 @@ public class TripService
             .Sum(t => t.TripCost);
     }
 
+    public double GetAverageConsumption(int vehicleId)
+    {
+        var totalKm = GetTotalDistance(vehicleId);
+        var totalFuel = GetTotalFuelUsed(vehicleId);
+        return totalKm > 0 ? (totalFuel / totalKm) * 100 : 0;
+    }
+
     public bool Delete(int id)
     {
         var trip = _context.Trips.Find(id);
