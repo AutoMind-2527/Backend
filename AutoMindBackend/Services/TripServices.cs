@@ -30,7 +30,7 @@ public class TripService
     }
 
     public Trip Add(Trip trip)
-    {   
+    {
         var vehicle = _context.Vehicles.Find(trip.VehicleId);
         if (vehicle == null)
             throw new Exception("Fahrzeug nicht gefunden.");
@@ -50,6 +50,13 @@ public class TripService
 
         Console.WriteLine($"Trip gespeichert: {trip.DistanceKm:F1} km, {trip.FuelUsed:F2} L, {trip.TripCost:F2} €");
         return trip;
+    }
+    
+    public double GetTotalDistance(int vehicleId)
+    {
+        return _context.Trips
+            .Where(t => t.VehicleId == vehicleId)
+            .Sum(t => t.DistanceKm);
     }
 
 
