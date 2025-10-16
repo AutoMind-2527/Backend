@@ -49,5 +49,12 @@ public class VehicleService
 
         Console.WriteLine($"Fahrzeug {vehicle.LicensePlate}: {distanceKm} km hinzugefügt. Neuer Kilometerstand: {vehicle.Mileage}");
     }
+    
+    public bool NeedsService(int vehicleId)
+    {
+        var vehicle = _context.Vehicles.Find(vehicleId);
+        if (vehicle == null) return false;
 
+        return vehicle.Mileage >= 15000 && vehicle.Mileage % 15000 < 1000;
+    }
 }
