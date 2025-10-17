@@ -29,12 +29,10 @@ public class GpsService
 
     public Trip CreateTripFromGps(double startLat, double startLon, double endLat, double endLon, int vehicleId)
     {
-        // Beispielhafte Berechnung, du kannst sie anpassen
         double distanceKm = 120; 
         DateTime startTime = DateTime.Now.AddHours(-2);
         DateTime endTime = DateTime.Now;
 
-        // 🔹 Trip erzeugen
         var trip = new Trip
         {
             StartTime = startTime,
@@ -48,7 +46,6 @@ public class GpsService
         _tripService.Add(trip);
         _vehicleService.AddMileage(vehicleId, distanceKm);
 
-        // 🔹 GPS-Daten hinzufügen
         var gpsStart = new GpsData
         {
             VehicleId = vehicleId,
@@ -67,7 +64,7 @@ public class GpsService
         _context.GpsData.AddRange(gpsStart, gpsEnd);
         _context.SaveChanges();
 
-        Console.WriteLine($"✅ Neuer Trip + GPS-Daten für Fahrzeug {vehicleId} gespeichert.");
+        Console.WriteLine($"Neuer Trip + GPS-Daten für Fahrzeug {vehicleId} gespeichert.");
         return trip;
     }
 }
