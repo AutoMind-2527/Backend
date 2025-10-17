@@ -155,3 +155,11 @@ C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\ne
 C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\vanja\Desktop\4Klasse\syp\AutoMind\Backend\AutoMindBackend\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
