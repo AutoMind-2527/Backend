@@ -8,4 +8,6 @@ public class Vehicle
     public string Model { get; set; } = string.Empty;
     public double Mileage { get; set; }
     public double FuelConsumption { get; set; }
+    
+    public int UserId { get; set; }
 }

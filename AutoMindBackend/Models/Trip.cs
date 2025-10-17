@@ -13,5 +13,7 @@ public class Trip
     
     public double FuelUsed { get; set; }        
     public double TripCost { get; set; }        
-    public double AverageSpeed { get; set; }    
+    public double AverageSpeed { get; set; } 
+
+    public int UserId { get; set; }   
 }
