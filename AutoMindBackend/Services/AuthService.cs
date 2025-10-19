@@ -30,13 +30,15 @@ public class AuthService
         {
             Username = username,
             PasswordHash = hash,
-            PasswordSalt = salt
+            PasswordSalt = salt,
+            Role = username.ToLower() == "admin" ? "Admin" : "User"
         };
 
         _context.Users.Add(user);
         _context.SaveChanges();
         return user;
     }
+
 
     public string Login(string username, string password)
     {
@@ -65,7 +67,11 @@ public class AuthService
 
     private string CreateToken(User user)
     {
-        var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Role, user.Role) // 🔹 Rolle ins Token packen
+        };
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
@@ -81,4 +87,5 @@ public class AuthService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
 }

@@ -89,4 +89,65 @@ public class TripService
         _context.SaveChanges();
         return true;
     }
+    public List<Trip> GetAllByUser(string username)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null) return new List<Trip>();
+
+        return _context.Trips
+            .Where(t => t.UserId == user.Id)
+            .ToList();
+    }
+
+    public Trip? GetByIdAndUser(int id, string username)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null) return null;
+
+        return _context.Trips.FirstOrDefault(t => t.Id == id && t.UserId == user.Id);
+    }
+
+    public List<Trip> GetByVehicleIdAndUser(int vehicleId, string username)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null) return new List<Trip>();
+
+        return _context.Trips
+            .Where(t => t.VehicleId == vehicleId && t.UserId == user.Id)
+            .ToList();
+    }
+
+    public Trip AddForUser(Trip trip, string username)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null) throw new Exception("Benutzer nicht gefunden.");
+
+        var vehicle = _context.Vehicles.FirstOrDefault(v => v.Id == trip.VehicleId && v.UserId == user.Id);
+        if (vehicle == null) throw new Exception("Kein Zugriff auf dieses Fahrzeug!");
+
+        trip.UserId = user.Id;
+
+        double durationHours = (trip.EndTime - trip.StartTime).TotalHours;
+        trip.AverageSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
+        trip.FuelUsed = trip.DistanceKm * (vehicle.FuelConsumption / 100);
+        trip.TripCost = trip.FuelUsed * 1.80;
+
+        _context.Trips.Add(trip);
+        _context.SaveChanges();
+        return trip;
+    }
+
+    public bool DeleteByUser(int id, string username)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (user == null) return false;
+
+        var trip = _context.Trips.FirstOrDefault(t => t.Id == id && t.UserId == user.Id);
+        if (trip == null) return false;
+
+        _context.Trips.Remove(trip);
+        _context.SaveChanges();
+        return true;
+    }
+
 }

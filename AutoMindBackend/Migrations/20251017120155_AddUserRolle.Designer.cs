@@ -3,6 +3,7 @@ using System;
 using AutoMindBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoMindBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017120155_AddUserRolle")]
+    partial class AddUserRolle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -71,9 +74,6 @@ namespace AutoMindBackend.Migrations
 
                     b.Property<double>("TripCost")
                         .HasColumnType("REAL");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("INTEGER");

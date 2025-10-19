@@ -1,62 +1,67 @@
 using Microsoft.AspNetCore.Mvc;
 using AutoMindBackend.Models;
 using AutoMindBackend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TripsController : ControllerBase
 {
     private readonly TripService _service;
+    private readonly UserContextService _userContext;
 
-    public TripsController(TripService service)
+    public TripsController(TripService service, UserContextService userContext)
     {
         _service = service;
+        _userContext = userContext;
     }
 
+    // 👑 Admin -> alle Trips, User -> nur eigene
     [HttpGet]
     public IActionResult GetAll()
     {
-        var trips = _service.GetAll();
-        return Ok(trips);
+        var username = _userContext.GetUsername();
+
+        if (User.IsInRole("Admin"))
+            return Ok(_service.GetAll());
+
+        return Ok(_service.GetAllByUser(username!));
     }
 
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
-        var trip = _service.GetById(id);
-        if (trip == null) return NotFound();
+        var username = _userContext.GetUsername();
+
+        if (User.IsInRole("Admin"))
+            return Ok(_service.GetById(id));
+
+        var trip = _service.GetByIdAndUser(id, username!);
+        if (trip == null) return Unauthorized("Kein Zugriff auf diese Fahrt!");
         return Ok(trip);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
     public IActionResult GetByVehicle(int vehicleId)
     {
-        var trips = _service.GetByVehicleId(vehicleId);
-        return Ok(trips);
-    }
+        var username = _userContext.GetUsername();
 
-    [HttpGet("stats/{vehicleId}")]
-    public IActionResult GetStats(int vehicleId)
-    {
-        var stats = new
-        {
-            TotalKm = _service.GetTotalDistance(vehicleId),
-            TotalFuel = _service.GetTotalFuelUsed(vehicleId),
-            TotalCost = _service.GetTotalCost(vehicleId),
-            AvgConsumption = _service.GetAverageConsumption(vehicleId)
-        };
-        return Ok(stats);
-    }
+        if (User.IsInRole("Admin"))
+            return Ok(_service.GetByVehicleId(vehicleId));
 
+        return Ok(_service.GetByVehicleIdAndUser(vehicleId, username!));
+    }
 
     [HttpPost]
     public IActionResult Create(Trip trip)
     {
         try
         {
-            var created = _service.Add(trip);
+            var username = _userContext.GetUsername();
+            var created = _service.AddForUser(trip, username!);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (Exception ex)
@@ -68,8 +73,15 @@ public class TripsController : ControllerBase
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        var deleted = _service.Delete(id);
-        if (!deleted) return NotFound();
-        return NoContent();
+        var username = _userContext.GetUsername();
+
+        if (User.IsInRole("Admin"))
+        {
+            var deleted = _service.Delete(id);
+            return deleted ? NoContent() : NotFound();
+        }
+
+        bool success = _service.DeleteByUser(id, username!);
+        return success ? NoContent() : Unauthorized("Kein Zugriff auf diese Fahrt!");
     }
 }
