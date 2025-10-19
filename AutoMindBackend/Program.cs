@@ -47,6 +47,8 @@ builder.Services.AddScoped<DataSeeder>();
 builder.Services.AddScoped<GpsService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserContextService>();
+builder.Services.AddScoped<UserService>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
