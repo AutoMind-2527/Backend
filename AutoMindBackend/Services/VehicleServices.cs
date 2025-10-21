@@ -67,17 +67,6 @@ public class VehicleService
             .Where(v => v.UserId == user.Id)
             .ToList();
     }
-
-    public Vehicle AddForUser(Vehicle vehicle, string username)
-    {
-        var user = _context.Users.FirstOrDefault(u => u.Username == username);
-        if (user == null) throw new Exception("Benutzer nicht gefunden.");
-
-        vehicle.UserId = user.Id;
-        _context.Vehicles.Add(vehicle);
-        _context.SaveChanges();
-        return vehicle;
-    }
     
     public Vehicle? GetByIdAndUser(int id, string username)
     {
@@ -99,4 +88,34 @@ public class VehicleService
         _context.SaveChanges();
         return true;
     }
+
+    public Vehicle AddForUser(Vehicle vehicle, string username, string role)
+    {
+        var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (currentUser == null)
+            throw new Exception("Benutzer nicht gefunden.");
+
+        if (role == "Admin")
+        {
+            if (vehicle.UserId == 0)
+            {
+                vehicle.UserId = currentUser.Id;
+            }
+            else
+            {
+                var targetUser = _context.Users.FirstOrDefault(u => u.Id == vehicle.UserId);
+                if (targetUser == null)
+                    throw new Exception($"Benutzer mit ID {vehicle.UserId} existiert nicht.");
+            }
+        }
+        else
+        {
+            vehicle.UserId = currentUser.Id;
+        }
+
+        _context.Vehicles.Add(vehicle);
+        _context.SaveChanges();
+        return vehicle;
+    }
+
 }

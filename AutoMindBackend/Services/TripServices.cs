@@ -117,26 +117,6 @@ public class TripService
             .ToList();
     }
 
-    public Trip AddForUser(Trip trip, string username)
-    {
-        var user = _context.Users.FirstOrDefault(u => u.Username == username);
-        if (user == null) throw new Exception("Benutzer nicht gefunden.");
-
-        var vehicle = _context.Vehicles.FirstOrDefault(v => v.Id == trip.VehicleId && v.UserId == user.Id);
-        if (vehicle == null) throw new Exception("Kein Zugriff auf dieses Fahrzeug!");
-
-        trip.UserId = user.Id;
-
-        double durationHours = (trip.EndTime - trip.StartTime).TotalHours;
-        trip.AverageSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
-        trip.FuelUsed = trip.DistanceKm * (vehicle.FuelConsumption / 100);
-        trip.TripCost = trip.FuelUsed * 1.80;
-
-        _context.Trips.Add(trip);
-        _context.SaveChanges();
-        return trip;
-    }
-
     public bool DeleteByUser(int id, string username)
     {
         var user = _context.Users.FirstOrDefault(u => u.Username == username);
@@ -148,6 +128,49 @@ public class TripService
         _context.Trips.Remove(trip);
         _context.SaveChanges();
         return true;
+    }
+
+    public Trip AddForUser(Trip trip, string username, string role)
+    {
+        var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
+        if (currentUser == null)
+            throw new Exception("Benutzer nicht gefunden.");
+
+        if (role == "Admin")
+        {
+            if (trip.UserId == 0)
+            {
+                trip.UserId = currentUser.Id;
+            }
+            else
+            {
+                var targetUser = _context.Users.FirstOrDefault(u => u.Id == trip.UserId);
+                if (targetUser == null)
+                    throw new Exception($"Benutzer mit ID {trip.UserId} existiert nicht.");
+            }
+        }
+        else
+        {
+            trip.UserId = currentUser.Id;
+
+            var vehicle = _context.Vehicles.FirstOrDefault(v => v.Id == trip.VehicleId && v.UserId == currentUser.Id);
+            if (vehicle == null)
+                throw new Exception("Kein Zugriff auf dieses Fahrzeug!");
+        }
+
+        var usedVehicle = _context.Vehicles.FirstOrDefault(v => v.Id == trip.VehicleId);
+        if (usedVehicle == null)
+            throw new Exception("Fahrzeug nicht gefunden.");
+
+        double durationHours = (trip.EndTime - trip.StartTime).TotalHours;
+        trip.AverageSpeed = durationHours > 0 ? trip.DistanceKm / durationHours : 0;
+        trip.FuelUsed = trip.DistanceKm * (usedVehicle.FuelConsumption / 100);
+        trip.TripCost = trip.FuelUsed * 1.80;
+
+        _context.Trips.Add(trip);
+        _context.SaveChanges();
+
+        return trip;
     }
 
 }

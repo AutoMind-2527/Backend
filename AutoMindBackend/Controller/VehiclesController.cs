@@ -51,14 +51,6 @@ public class VehiclesController : ControllerBase
         return Ok(new { vehicleId = id, needsService });
     }
 
-    [HttpPost]
-    public IActionResult Create(Vehicle vehicle)
-    {
-        var username = _userContext.GetUsername();
-        var created = _service.AddForUser(vehicle, username!);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    }
-
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
@@ -73,4 +65,15 @@ public class VehiclesController : ControllerBase
         bool success = _service.DeleteByUser(id, username!);
         return success ? NoContent() : Unauthorized("Kein Zugriff auf dieses Fahrzeug!");
     }
+
+    [HttpPost]
+    public IActionResult Create(Vehicle vehicle)
+    {
+        var username = _userContext.GetUsername();
+        var role = _userContext.GetRole();
+
+        var created = _service.AddForUser(vehicle, username!, role!);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+
 }

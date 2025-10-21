@@ -55,21 +55,6 @@ public class TripsController : ControllerBase
         return Ok(_service.GetByVehicleIdAndUser(vehicleId, username!));
     }
 
-    [HttpPost]
-    public IActionResult Create(Trip trip)
-    {
-        try
-        {
-            var username = _userContext.GetUsername();
-            var created = _service.AddForUser(trip, username!);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
@@ -84,4 +69,21 @@ public class TripsController : ControllerBase
         bool success = _service.DeleteByUser(id, username!);
         return success ? NoContent() : Unauthorized("Kein Zugriff auf diese Fahrt!");
     }
+    
+    [HttpPost]
+    public IActionResult Create(Trip trip)
+    {
+        try
+        {
+            var username = _userContext.GetUsername();
+            var role = _userContext.GetRole();
+            var created = _service.AddForUser(trip, username!, role!);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }

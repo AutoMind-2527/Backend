@@ -15,4 +15,9 @@ public class UserContextService
     {
         return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
     }
+
+    public string? GetRole()
+    {
+        return _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Role);
+    }
 }
