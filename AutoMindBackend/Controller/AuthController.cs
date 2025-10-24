@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AutoMindBackend.Services;
+using Microsoft.AspNetCore.Authorization;
+using AutoMindBackend.Models;
 
 namespace AutoMindBackend.Controllers;
 
@@ -41,6 +43,22 @@ public class AuthController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost("{id}/reset-password")]
+    public IActionResult ResetPassword(int id, [FromBody] ResetPasswordDto dto)
+    {
+        try
+        {
+            _authService.ResetPassword(id, dto.NewPassword);
+            return Ok(new { message = "Passwort erfolgreich gesetzt. Bitte Benutzer informieren." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }
 
 public class LoginDto
