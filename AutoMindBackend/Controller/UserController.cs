@@ -32,6 +32,7 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
+
     [HttpDelete("{id}")]
     public IActionResult DeleteUser(int id)
     {

@@ -12,10 +12,10 @@ public class UserService
         _context = context;
     }
 
-    public List<User> GetAll()
+    public List<UserPublicDto> GetAll()
     {
         return _context.Users
-            .Select(u => new User
+            .Select(u => new UserPublicDto
             {
                 Id = u.Id,
                 Username = u.Username,
@@ -24,18 +24,20 @@ public class UserService
             .ToList();
     }
 
-    public User? GetById(int id)
+
+    public UserPublicDto? GetById(int id)
     {
-        var user = _context.Users.Find(id);
+        var user = _context.Users.FirstOrDefault(u => u.Id == id);
         if (user == null) return null;
 
-        return new User
+        return new UserPublicDto
         {
             Id = user.Id,
             Username = user.Username,
             Role = user.Role
         };
     }
+
 
     public bool Delete(int id)
     {
