@@ -68,14 +68,26 @@ public class TripsController : ControllerBase
         bool success = _service.DeleteByUser(id, username!);
         return success ? NoContent() : Unauthorized("Kein Zugriff auf diese Fahrt!");
     }
-    
+
     [HttpPost]
-    public IActionResult Create(Trip trip)
+    public IActionResult Create(TripCreateDto dto)
     {
         try
         {
             var username = _userContext.GetUsername();
             var role = _userContext.GetRole();
+
+            var trip = new Trip
+            {
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                DistanceKm = dto.DistanceKm,
+                StartLocation = dto.StartLocation,
+                EndLocation = dto.EndLocation,
+                VehicleId = dto.VehicleId,
+                UserId = dto.UserId ?? 0 //nur für admin
+            };
+
             var created = _service.AddForUser(trip, username!, role!);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -84,5 +96,4 @@ public class TripsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
-
 }

@@ -66,10 +66,21 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create(Vehicle vehicle)
+    public IActionResult Create(VehicleCreateDto dto)
     {
         var username = _userContext.GetUsername();
         var role = _userContext.GetRole();
+
+        
+        var vehicle = new Vehicle
+        {
+            LicensePlate = dto.LicensePlate,
+            Brand = dto.Brand,
+            Model = dto.Model,
+            Mileage = dto.Mileage,
+            FuelConsumption = dto.FuelConsumption,
+            UserId = dto.UserId ?? 0 //nur für admins
+        };
 
         var created = _service.AddForUser(vehicle, username!, role!);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
