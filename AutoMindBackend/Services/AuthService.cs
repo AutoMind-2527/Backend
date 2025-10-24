@@ -70,7 +70,7 @@ public class AuthService
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role) // 🔹 Rolle ins Token packen
+            new Claim(ClaimTypes.Role, user.Role) 
         };
 
         var key = new SymmetricSecurityKey(
