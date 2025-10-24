@@ -70,7 +70,7 @@ public class AuthService
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role) 
+            new Claim(ClaimTypes.Role, user.Role)
         };
 
         var key = new SymmetricSecurityKey(
@@ -88,4 +88,20 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    public void ResetPassword(int userId, string newPassword)
+    {
+        var user = _context.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null) throw new Exception("Benutzer nicht gefunden.");
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new Exception("Neues Passwort muss mindestens 6 Zeichen haben.");
+
+        CreatePasswordHash(newPassword, out byte[] hash, out byte[] salt);
+
+        user.PasswordHash = hash;
+        user.PasswordSalt = salt;
+        _context.SaveChanges();
+
+        Console.WriteLine($"[AuthService] Admin hat Passwort für UserId {userId} zurückgesetzt.");
+    }
 }
