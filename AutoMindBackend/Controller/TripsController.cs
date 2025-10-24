@@ -19,7 +19,6 @@ public class TripsController : ControllerBase
         _userContext = userContext;
     }
 
-    // 👑 Admin -> alle Trips, User -> nur eigene
     [HttpGet]
     public IActionResult GetAll()
     {

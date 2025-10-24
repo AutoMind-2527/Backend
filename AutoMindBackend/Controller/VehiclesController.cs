@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // Nur eingeloggte User (mit Token)
+[Authorize] 
 public class VehiclesController : ControllerBase
 {
     private readonly VehicleService _service;
@@ -19,7 +19,6 @@ public class VehiclesController : ControllerBase
         _userContext = userContext;
     }
 
-    // 👑 Admin -> alle, User -> eigene Fahrzeuge
     [HttpGet]
     public IActionResult GetAll()
     {

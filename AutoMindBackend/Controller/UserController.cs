@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")] // 🔒 Nur Admins dürfen diese Endpoints
+[Authorize(Roles = "Admin")] 
 public class UsersController : ControllerBase
 {
     private readonly UserService _userService;
