@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4n+Z934C/Mg=",
+  "dgSpecHash": "jz5B4Dgfcdg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
+  "projectFilePath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vanja\\.nuget\\packages\\coverlet.collector\\6.0.2\\coverlet.collector.6.0.2.nupkg.sha512",
     "C:\\Users\\vanja\\.nuget\\packages\\fluentassertions\\8.8.0\\fluentassertions.8.8.0.nupkg.sha512",

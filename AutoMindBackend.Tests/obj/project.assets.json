@@ -2990,8 +2990,8 @@
     },
     "AutoMindBackend/1.0.0": {
       "type": "project",
-      "path": "../AutoMindBackend.csproj",
-      "msbuildProject": "../AutoMindBackend.csproj"
+      "path": "../AutoMindBackend/AutoMindBackend.csproj",
+      "msbuildProject": "../AutoMindBackend/AutoMindBackend.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -3011,11 +3011,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
       "projectName": "AutoMindBackend.Tests",
-      "projectPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
+      "projectPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
       "packagesPath": "C:\\Users\\vanja\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\obj\\",
+      "outputPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vanja\\AppData\\Roaming\\NuGet\\NuGet.Config",

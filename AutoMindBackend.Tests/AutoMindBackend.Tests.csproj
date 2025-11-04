@@ -16,9 +16,9 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
-
+  
 <ItemGroup>
-  <ProjectReference Include="..\AutoMindBackend.csproj" />
+  <ProjectReference Include="..\AutoMindBackend\AutoMindBackend.csproj" />
 </ItemGroup>
 
 </Project>
