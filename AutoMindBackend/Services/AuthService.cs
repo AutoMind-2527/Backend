@@ -93,8 +93,8 @@ public class AuthService
         var user = _context.Users.FirstOrDefault(u => u.Id == userId);
         if (user == null) throw new Exception("Benutzer nicht gefunden.");
 
-        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
-            throw new Exception("Neues Passwort muss mindestens 6 Zeichen haben.");
+        if (string.IsNullOrWhiteSpace(newPassword))
+            throw new Exception("Neues Passwort darf nicht leer sein.");
 
         CreatePasswordHash(newPassword, out byte[] hash, out byte[] salt);
 
