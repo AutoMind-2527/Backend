@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.csproj": {}
+    "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj": {}
   },
   "projects": {
     "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.csproj": {
@@ -96,6 +96,97 @@
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
             },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
+        "projectName": "AutoMindBackend.Tests",
+        "projectPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\AutoMindBackend.Tests.csproj",
+        "packagesPath": "C:\\Users\\vanja\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.Tests\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\vanja\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.csproj": {
+                "projectPath": "C:\\Users\\vanja\\Desktop\\4Klasse\\syp\\AutoMind\\Backend\\AutoMindBackend\\AutoMindBackend.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[8.8.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.InMemory": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[18.0.0, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.2, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.9.3, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[3.1.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
