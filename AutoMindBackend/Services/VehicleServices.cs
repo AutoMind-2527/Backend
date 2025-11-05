@@ -52,12 +52,12 @@ public class VehicleService
 
     public bool NeedsService(int vehicleId)
     {
-        var vehicle = _context.Vehicles.Find(vehicleId);
-        if (vehicle == null) return false;
+        var v = _context.Vehicles.Find(vehicleId);
+        if (v == null) return false;
 
-        return vehicle.Mileage >= 15000 && vehicle.Mileage % 15000 < 1000;
+        return v.Mileage >= 15000 && v.Mileage % 15000 <= 1000;
     }
-    
+
     public List<Vehicle> GetAllByUser(string username)
     {
         var user = _context.Users.FirstOrDefault(u => u.Username == username);

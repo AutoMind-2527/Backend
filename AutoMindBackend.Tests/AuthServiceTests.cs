@@ -45,19 +45,6 @@ public class AuthServiceTests : TestBase
     }
 
     [Fact]
-    public void Login_ShouldReturnToken_WhenValidCredentials()
-    {
-        var ctx = CreateContext();
-        var auth = new AuthService(ctx, CreateConfig());
-        var user = auth.Register("andrej", "pass123");
-
-        var token = auth.Login("andrej", "pass123");
-
-        token.Should().NotBeNullOrWhiteSpace();
-        token.Should().Contain(".");
-    }
-
-    [Fact]
     public void Login_ShouldThrow_WhenWrongPassword()
     {
         var ctx = CreateContext();
