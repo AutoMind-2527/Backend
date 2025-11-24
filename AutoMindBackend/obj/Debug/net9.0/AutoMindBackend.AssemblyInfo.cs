@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AutoMindBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9857452c078060c57e3c8d7b4b7fcaee10d7faf9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e223a2369c5a67647817763684cc4769b5827dc")]
 [assembly: System.Reflection.AssemblyProductAttribute("AutoMindBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AutoMindBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

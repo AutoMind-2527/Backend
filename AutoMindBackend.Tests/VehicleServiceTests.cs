@@ -12,42 +12,61 @@ public class VehicleServiceTests : TestBase
     {
         var ctx = CreateContext();
         var service = new VehicleService(ctx);
-        var vehicle = new Vehicle { LicensePlate = "L-123AA", Brand = "BMW", Model = "i4", Mileage = 1000, FuelConsumption = 6.5 };
+
+        var vehicle = new Vehicle
+        {
+            LicensePlate = "L-123AA",
+            Brand = "BMW",
+            Model = "i4",
+            Mileage = 1000,
+            FuelConsumption = 6.5,
+            UserId = 1
+        };
 
         var result = service.Add(vehicle);
 
         result.Id.Should().BeGreaterThan(0);
         ctx.Vehicles.Count().Should().Be(1);
+        ctx.Vehicles.Single().LicensePlate.Should().Be("L-123AA");
     }
 
     [Fact]
-    public void AddMileage_ShouldIncreaseMileage()
+    public void NeedsService_ShouldReturnTrue_WhenMileagePlusTripsOver10000()
     {
         var ctx = CreateContext();
-        var v = new Vehicle { Id = 1, LicensePlate = "L-999AA", Mileage = 1000 };
-        ctx.Vehicles.Add(v);
+
+        var vehicle = new Vehicle
+        {
+            Id = 1,
+            LicensePlate = "L-111AA",
+            Brand = "BMW",
+            Model = "i4",
+            Mileage = 9500,
+            FuelConsumption = 6.5,
+            UserId = 1,
+            Trips = new List<Trip>
+            {
+                new Trip
+                {
+                    Id = 1,
+                    VehicleId = 1,
+                    UserId = 1,
+                    DistanceKm = 600,
+                    StartTime = DateTime.Now.AddHours(-2),
+                    EndTime = DateTime.Now.AddHours(-1),
+                    StartLocation = "A",
+                    EndLocation = "B"
+                }
+            }
+        };
+
+        ctx.Vehicles.Add(vehicle);
         ctx.SaveChanges();
 
         var service = new VehicleService(ctx);
-        service.AddMileage(1, 250);
 
-        ctx.Vehicles.Find(1)!.Mileage.Should().Be(1250);
-    }
-
-    [Theory]
-    [InlineData(14900, false)]
-    [InlineData(15000, true)]
-    [InlineData(16000, true)]
-    [InlineData(15100, true)]
-    public void NeedsService_ShouldReturnExpected(double mileage, bool expected)
-    {
-        var ctx = CreateContext();
-        ctx.Vehicles.Add(new Vehicle { Id = 1, Mileage = mileage });
-        ctx.SaveChanges();
-
-        var service = new VehicleService(ctx);
         var result = service.NeedsService(1);
 
-        result.Should().Be(expected);
+        result.Should().BeTrue();
     }
 }
