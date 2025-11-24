@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMindBackend.Models;
 using AutoMindBackend.Services;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace AutoMindBackend.Controllers;
 
@@ -20,36 +19,44 @@ public class VehiclesController : ControllerBase
         _userSyncService = userSyncService;
     }
 
+    // GET /api/Vehicles
     [HttpGet]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetAll()
     {
         await _userSyncService.SyncUserFromKeycloak(User);
-        var keycloakUserId = User.FindFirst("sub")?.Value;
+        var user = await _userSyncService.GetUserFromKeycloak(User);
 
         if (User.IsInRole("Admin"))
             return Ok(_service.GetAll());
 
-        return Ok(_service.GetAllByKeycloakUser(keycloakUserId!));
+        // User sieht nur seine eigenen Fahrzeuge (über UserId)
+        return Ok(_service.GetAllByUserId(user.Id));
     }
 
+    // GET /api/Vehicles/{id}
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetById(int id)
     {
         await _userSyncService.SyncUserFromKeycloak(User);
-        var keycloakUserId = User.FindFirst("sub")?.Value;
+        var user = await _userSyncService.GetUserFromKeycloak(User);
 
         if (User.IsInRole("Admin"))
-            return Ok(_service.GetById(id));
+        {
+            var vAdmin = _service.GetById(id);
+            if (vAdmin == null) return NotFound();
+            return Ok(vAdmin);
+        }
 
-        var vehicle = _service.GetByIdAndKeycloakUser(id, keycloakUserId!);
-        if (vehicle == null) 
+        var vehicle = _service.GetByIdAndUserId(id, user.Id);
+        if (vehicle == null)
             return Unauthorized("Kein Zugriff auf dieses Fahrzeug!");
-        
+
         return Ok(vehicle);
     }
 
+    // GET /api/Vehicles/{id}/service-status
     [HttpGet("{id}/service-status")]
     [Authorize(Roles = "Admin,User")]
     public IActionResult CheckService(int id)
@@ -58,6 +65,7 @@ public class VehiclesController : ControllerBase
         return Ok(serviceStatus);
     }
 
+    // GET /api/Vehicles/{id}/stats
     [HttpGet("{id}/stats")]
     [Authorize(Roles = "Admin,User")]
     public IActionResult GetVehicleStats(int id)
@@ -65,10 +73,11 @@ public class VehiclesController : ControllerBase
         var stats = _service.GetVehicleStats(id);
         if (stats == null)
             return NotFound();
-        
+
         return Ok(stats);
     }
 
+    // GET /api/Vehicles/needing-service (nur Admin)
     [HttpGet("needing-service")]
     [Authorize(Roles = "Admin")]
     public IActionResult GetVehiclesNeedingService()
@@ -77,6 +86,7 @@ public class VehiclesController : ControllerBase
         return Ok(vehicles);
     }
 
+    // DELETE /api/Vehicles/{id} (nur Admin)
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
@@ -85,6 +95,7 @@ public class VehiclesController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
+    // POST /api/Vehicles
     [HttpPost]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Create(VehicleCreateDto dto)
@@ -99,21 +110,22 @@ public class VehiclesController : ControllerBase
             Model = dto.Model,
             Mileage = dto.Mileage,
             FuelConsumption = dto.FuelConsumption,
-            UserId = user.Id
+            UserId = user.Id    // WICHTIG: Besitzer setzen
         };
 
         var created = _service.Add(vehicle);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    // PUT /api/Vehicles/{id}
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Update(int id, VehicleUpdateDto dto)
     {
         await _userSyncService.SyncUserFromKeycloak(User);
-        var keycloakUserId = User.FindFirst("sub")?.Value;
+        var user = await _userSyncService.GetUserFromKeycloak(User);
 
-        Vehicle updatedVehicle;
+        Vehicle? updatedVehicle;
 
         if (User.IsInRole("Admin"))
         {
@@ -122,7 +134,7 @@ public class VehiclesController : ControllerBase
         else
         {
             // Prüfen ob User Zugriff auf das Fahrzeug hat
-            var existingVehicle = _service.GetByIdAndKeycloakUser(id, keycloakUserId!);
+            var existingVehicle = _service.GetByIdAndUserId(id, user.Id);
             if (existingVehicle == null)
                 return Unauthorized("Kein Zugriff auf dieses Fahrzeug!");
 

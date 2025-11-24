@@ -13,7 +13,7 @@ public class VehicleService
         _context = context;
     }
 
-    // Get all vehicles (Admin only)
+    // Admin: alle Fahrzeuge
     public List<Vehicle> GetAll()
     {
         return _context.Vehicles
@@ -22,18 +22,18 @@ public class VehicleService
             .ToList();
     }
 
-    // Get vehicles by Keycloak user
-    public List<Vehicle> GetAllByKeycloakUser(string keycloakUserId)
+    // User: alle Fahrzeuge des Users (über UserId)
+    public List<Vehicle> GetAllByUserId(int userId)
     {
         return _context.Vehicles
             .Include(v => v.User)
             .Include(v => v.Trips)
-            .Where(v => v.User.KeycloakId == keycloakUserId)
+            .Where(v => v.UserId == userId)
             .ToList();
     }
 
-    // Get vehicle by ID
-    public Vehicle? GetById(int id) // ✅ Nullable return type
+    // Fahrzeug nach Id (Admin)
+    public Vehicle? GetById(int id)
     {
         return _context.Vehicles
             .Include(v => v.User)
@@ -41,16 +41,16 @@ public class VehicleService
             .FirstOrDefault(v => v.Id == id);
     }
 
-    // Get vehicle by ID and Keycloak user
-    public Vehicle? GetByIdAndKeycloakUser(int id, string keycloakUserId) // ✅ Nullable return type
+    // Fahrzeug nach Id und UserId (User darf nur eigene sehen)
+    public Vehicle? GetByIdAndUserId(int id, int userId)
     {
         return _context.Vehicles
             .Include(v => v.User)
             .Include(v => v.Trips)
-            .FirstOrDefault(v => v.Id == id && v.User.KeycloakId == keycloakUserId);
+            .FirstOrDefault(v => v.Id == id && v.UserId == userId);
     }
 
-    // Check if vehicle needs service
+    // Prüfen ob Service fällig ist
     public bool NeedsService(int vehicleId)
     {
         var vehicle = _context.Vehicles
@@ -65,7 +65,7 @@ public class VehicleService
         return (vehicle.Mileage + totalDistance) >= 10000;
     }
 
-    // Get service status with details
+    // Service-Status mit Details
     public object GetServiceStatus(int vehicleId)
     {
         var vehicle = _context.Vehicles
@@ -90,7 +90,7 @@ public class VehicleService
         };
     }
 
-    // Create new vehicle
+    // Neues Fahrzeug anlegen
     public Vehicle Add(Vehicle vehicle)
     {
         _context.Vehicles.Add(vehicle);
@@ -98,8 +98,8 @@ public class VehicleService
         return vehicle;
     }
 
-    // Update vehicle
-    public Vehicle? Update(int id, VehicleUpdateDto dto) // ✅ Nullable return type
+    // Fahrzeug updaten
+    public Vehicle? Update(int id, VehicleUpdateDto dto)
     {
         var vehicle = _context.Vehicles.Find(id);
         if (vehicle == null)
@@ -115,7 +115,7 @@ public class VehicleService
         return vehicle;
     }
 
-    // Delete vehicle
+    // Fahrzeug löschen (Admin)
     public bool Delete(int id)
     {
         var vehicle = _context.Vehicles.Find(id);
@@ -127,12 +127,11 @@ public class VehicleService
         return true;
     }
 
-    // Delete vehicle by user
-    public bool DeleteByKeycloakUser(int id, string keycloakUserId)
+    // Optional: Fahrzeug vom Besitzer löschen (falls du das später brauchst)
+    public bool DeleteByUserId(int id, int userId)
     {
         var vehicle = _context.Vehicles
-            .Include(v => v.User)
-            .FirstOrDefault(v => v.Id == id && v.User.KeycloakId == keycloakUserId);
+            .FirstOrDefault(v => v.Id == id && v.UserId == userId);
 
         if (vehicle == null)
             return false;
@@ -142,7 +141,7 @@ public class VehicleService
         return true;
     }
 
-    // Get vehicles that need service
+    // Fahrzeuge, die Service brauchen (Admin)
     public List<Vehicle> GetVehiclesNeedingService()
     {
         var vehicles = _context.Vehicles
@@ -153,8 +152,8 @@ public class VehicleService
         return vehicles.Where(v => NeedsService(v.Id)).ToList();
     }
 
-    // Get vehicle statistics
-    public object? GetVehicleStats(int vehicleId) // ✅ Nullable return type
+    // Stats für ein Fahrzeug
+    public object? GetVehicleStats(int vehicleId)
     {
         var vehicle = _context.Vehicles
             .Include(v => v.Trips)
