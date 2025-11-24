@@ -13,24 +13,26 @@ public class TripService
         _context = context;
     }
 
+    // Admin: alle Trips
     public List<Trip> GetAll()
-    {
-        return _context.Trips
-            .Include(t => t.User) // ✅ Jetzt funktioniert es!
-            .Include(t => t.Vehicle)
-            .ToList();
-    }
-
-    public List<Trip> GetAllByKeycloakUser(string keycloakUserId)
     {
         return _context.Trips
             .Include(t => t.User)
             .Include(t => t.Vehicle)
-            .Where(t => t.User.KeycloakId == keycloakUserId)
             .ToList();
     }
 
-    public Trip GetById(int id)
+    // User: alle eigenen Trips über UserId
+    public List<Trip> GetAllByUserId(int userId)
+    {
+        return _context.Trips
+            .Include(t => t.User)
+            .Include(t => t.Vehicle)
+            .Where(t => t.UserId == userId)
+            .ToList();
+    }
+
+    public Trip? GetById(int id)
     {
         return _context.Trips
             .Include(t => t.User)
@@ -38,12 +40,12 @@ public class TripService
             .FirstOrDefault(t => t.Id == id);
     }
 
-    public Trip GetByIdAndKeycloakUser(int id, string keycloakUserId)
+    public Trip? GetByIdAndUserId(int id, int userId)
     {
         return _context.Trips
             .Include(t => t.User)
             .Include(t => t.Vehicle)
-            .FirstOrDefault(t => t.Id == id && t.User.KeycloakId == keycloakUserId);
+            .FirstOrDefault(t => t.Id == id && t.UserId == userId);
     }
 
     public List<Trip> GetByVehicleId(int vehicleId)
@@ -55,12 +57,12 @@ public class TripService
             .ToList();
     }
 
-    public List<Trip> GetByVehicleIdAndKeycloakUser(int vehicleId, string keycloakUserId)
+    public List<Trip> GetByVehicleIdAndUserId(int vehicleId, int userId)
     {
         return _context.Trips
             .Include(t => t.User)
             .Include(t => t.Vehicle)
-            .Where(t => t.VehicleId == vehicleId && t.User.KeycloakId == keycloakUserId)
+            .Where(t => t.VehicleId == vehicleId && t.UserId == userId)
             .ToList();
     }
 
@@ -75,7 +77,7 @@ public class TripService
     {
         var trip = _context.Trips.Find(id);
         if (trip == null) return false;
-        
+
         _context.Trips.Remove(trip);
         _context.SaveChanges();
         return true;
