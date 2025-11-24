@@ -15,30 +15,7 @@ namespace AutoMindBackend.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
-
-            modelBuilder.Entity("AutoMindBackend.Models.GpsData", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("REAL");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("REAL");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("VehicleId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GpsData");
-                });
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.1");
 
             modelBuilder.Entity("AutoMindBackend.Models.Trip", b =>
                 {
@@ -46,31 +23,24 @@ namespace AutoMindBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<double>("AverageSpeed")
-                        .HasColumnType("REAL");
-
                     b.Property<double>("DistanceKm")
-                        .HasColumnType("REAL");
+                        .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("EndLocation")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("FuelUsed")
-                        .HasColumnType("REAL");
-
                     b.Property<string>("StartLocation")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
-
-                    b.Property<double>("TripCost")
-                        .HasColumnType("REAL");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
@@ -79,6 +49,10 @@ namespace AutoMindBackend.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VehicleId");
 
                     b.ToTable("Trips");
                 });
@@ -89,25 +63,57 @@ namespace AutoMindBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<byte[]>("PasswordHash")
+                    b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("BLOB");
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("PasswordSalt")
+                    b.Property<string>("KeycloakId")
                         .IsRequired()
-                        .HasColumnType("BLOB");
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("Role")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PasswordSalt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("User");
+
                     b.Property<string>("Username")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("KeycloakId")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Email = "admin@automind.com",
+                            KeycloakId = "admin-keycloak-id",
+                            PasswordHash = "",
+                            PasswordSalt = "",
+                            Role = "Admin",
+                            Username = "admin"
+                        });
                 });
 
             modelBuilder.Entity("AutoMindBackend.Models.Vehicle", b =>
@@ -118,20 +124,23 @@ namespace AutoMindBackend.Migrations
 
                     b.Property<string>("Brand")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<double>("FuelConsumption")
-                        .HasColumnType("REAL");
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("LicensePlate")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<double>("Mileage")
-                        .HasColumnType("REAL");
+                    b.Property<int>("Mileage")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Model")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
@@ -139,7 +148,51 @@ namespace AutoMindBackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Vehicles");
+                });
+
+            modelBuilder.Entity("AutoMindBackend.Models.Trip", b =>
+                {
+                    b.HasOne("AutoMindBackend.Models.User", "User")
+                        .WithMany("Trips")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AutoMindBackend.Models.Vehicle", "Vehicle")
+                        .WithMany("Trips")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("AutoMindBackend.Models.Vehicle", b =>
+                {
+                    b.HasOne("AutoMindBackend.Models.User", "User")
+                        .WithMany("Vehicles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AutoMindBackend.Models.User", b =>
+                {
+                    b.Navigation("Trips");
+
+                    b.Navigation("Vehicles");
+                });
+
+            modelBuilder.Entity("AutoMindBackend.Models.Vehicle", b =>
+                {
+                    b.Navigation("Trips");
                 });
 #pragma warning restore 612, 618
         }

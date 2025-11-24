@@ -1,37 +1,29 @@
-using System.Security.Cryptography;
-using System.Text;
 using AutoMindBackend.Data;
 using AutoMindBackend.Models;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace AutoMindBackend.Services;
 
 public class AuthService
 {
     private readonly AppDbContext _context;
-    private readonly IConfiguration _config;
 
-    public AuthService(AppDbContext context, IConfiguration config)
+    public AuthService(AppDbContext context)
     {
         _context = context;
-        _config = config;
     }
 
-    public User Register(string username, string password)
+    // ✅ Nur für lokale Benutzer (falls benötigt)
+    public User CreateLocalUser(string username, string password)
     {
         if (_context.Users.Any(u => u.Username == username))
-            throw new Exception("Benutzername existiert bereits.");
-
-        CreatePasswordHash(password, out byte[] hash, out byte[] salt);
+            throw new Exception("Benutzername bereits vergeben");
 
         var user = new User
         {
             Username = username,
-            PasswordHash = hash,
-            PasswordSalt = salt,
-            Role = username.ToLower() == "admin" ? "Admin" : "User"
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password), // Nur für lokale Benutzer
+            Role = "User"
         };
 
         _context.Users.Add(user);
@@ -39,69 +31,45 @@ public class AuthService
         return user;
     }
 
+    // ✅ Keycloak Benutzer synchronisieren
+    public User SyncKeycloakUser(string keycloakUserId, string username, string email, string role)
+    {
+        var existingUser = _context.Users.FirstOrDefault(u => u.KeycloakId == keycloakUserId);
+        
+        if (existingUser != null)
+        {
+            // Update falls nötig
+            existingUser.Username = username;
+            existingUser.Email = email;
+            existingUser.Role = role;
+        }
+        else
+        {
+            // Neuen Benutzer erstellen
+            existingUser = new User
+            {
+                KeycloakId = keycloakUserId,
+                Username = username,
+                Email = email,
+                Role = role
+            };
+            _context.Users.Add(existingUser);
+        }
 
-    public string Login(string username, string password)
+        _context.SaveChanges();
+        return existingUser;
+    }
+
+    // ✅ Lokales Login (falls benötigt)
+    public User ValidateLocalUser(string username, string password)
     {
         var user = _context.Users.FirstOrDefault(u => u.Username == username);
-        if (user == null) throw new Exception("Benutzer nicht gefunden.");
+        if (user == null)
+            throw new Exception("Benutzer nicht gefunden");
 
-        if (!VerifyPassword(password, user.PasswordHash, user.PasswordSalt))
-            throw new Exception("Falsches Passwort.");
+        if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            throw new Exception("Ungültiges Passwort");
 
-        return CreateToken(user);
-    }
-
-    private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
-    {
-        using var hmac = new HMACSHA512();
-        salt = hmac.Key;
-        hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-    }
-
-    private bool VerifyPassword(string password, byte[] hash, byte[] salt)
-    {
-        using var hmac = new HMACSHA512(salt);
-        var computed = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return computed.SequenceEqual(hash);
-    }
-
-    private string CreateToken(User user)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)
-        );
-
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.Now.AddHours(6),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public void ResetPassword(int userId, string newPassword)
-    {
-        var user = _context.Users.FirstOrDefault(u => u.Id == userId);
-        if (user == null) throw new Exception("Benutzer nicht gefunden.");
-
-        if (string.IsNullOrWhiteSpace(newPassword))
-            throw new Exception("Neues Passwort darf nicht leer sein.");
-
-        CreatePasswordHash(newPassword, out byte[] hash, out byte[] salt);
-
-        user.PasswordHash = hash;
-        user.PasswordSalt = salt;
-        _context.SaveChanges();
-
-        Console.WriteLine($"[AuthService] Admin hat Passwort für UserId {userId} zurückgesetzt.");
+        return user;
     }
 }

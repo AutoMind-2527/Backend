@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")] 
+[Authorize(Roles = "Admin")] // Nur Admin
 public class UsersController : ControllerBase
 {
     private readonly UserService _userService;
@@ -31,7 +31,6 @@ public class UsersController : ControllerBase
         if (user == null) return NotFound();
         return Ok(user);
     }
-
 
     [HttpDelete("{id}")]
     public IActionResult DeleteUser(int id)

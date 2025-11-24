@@ -7,9 +7,5 @@ public class TripCreateDto
     public double DistanceKm { get; set; }
     public string StartLocation { get; set; } = string.Empty;
     public string EndLocation { get; set; } = string.Empty;
-
     public int VehicleId { get; set; }
-
-    // nur für admin
-    public int? UserId { get; set; }
 }

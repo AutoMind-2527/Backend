@@ -2,80 +2,81 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMindBackend.Models;
 using AutoMindBackend.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize] // Nur eingeloggte Benutzer
 public class TripsController : ControllerBase
 {
     private readonly TripService _service;
-    private readonly UserContextService _userContext;
+    private readonly UserSyncService _userSyncService;
 
-    public TripsController(TripService service, UserContextService userContext)
+    public TripsController(TripService service, UserSyncService userSyncService)
     {
         _service = service;
-        _userContext = userContext;
+        _userSyncService = userSyncService;
     }
 
     [HttpGet]
-    public IActionResult GetAll()
+    [Authorize(Roles = "Admin,User")] // Rollen von Keycloak
+    public async Task<IActionResult> GetAll()
     {
-        var username = _userContext.GetUsername();
+        await _userSyncService.SyncUserFromKeycloak(User);
+        var keycloakUserId = User.FindFirst("sub")?.Value;
 
         if (User.IsInRole("Admin"))
             return Ok(_service.GetAll());
 
-        return Ok(_service.GetAllByUser(username!));
+        return Ok(_service.GetAllByKeycloakUser(keycloakUserId!));
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(int id)
+    [Authorize(Roles = "Admin,User")]
+    public async Task<IActionResult> GetById(int id)
     {
-        var username = _userContext.GetUsername();
+        await _userSyncService.SyncUserFromKeycloak(User);
+        var keycloakUserId = User.FindFirst("sub")?.Value;
 
         if (User.IsInRole("Admin"))
             return Ok(_service.GetById(id));
 
-        var trip = _service.GetByIdAndUser(id, username!);
+        var trip = _service.GetByIdAndKeycloakUser(id, keycloakUserId!);
         if (trip == null) return Unauthorized("Kein Zugriff auf diese Fahrt!");
         return Ok(trip);
     }
 
     [HttpGet("vehicle/{vehicleId}")]
-    public IActionResult GetByVehicle(int vehicleId)
+    [Authorize(Roles = "Admin,User")]
+    public async Task<IActionResult> GetByVehicle(int vehicleId)
     {
-        var username = _userContext.GetUsername();
+        await _userSyncService.SyncUserFromKeycloak(User);
+        var keycloakUserId = User.FindFirst("sub")?.Value;
 
         if (User.IsInRole("Admin"))
             return Ok(_service.GetByVehicleId(vehicleId));
 
-        return Ok(_service.GetByVehicleIdAndUser(vehicleId, username!));
+        return Ok(_service.GetByVehicleIdAndKeycloakUser(vehicleId, keycloakUserId!));
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")] // Nur Admin darf löschen
     public IActionResult Delete(int id)
     {
-        var username = _userContext.GetUsername();
-
-        if (User.IsInRole("Admin"))
-        {
-            var deleted = _service.Delete(id);
-            return deleted ? NoContent() : NotFound();
-        }
-
-        bool success = _service.DeleteByUser(id, username!);
-        return success ? NoContent() : Unauthorized("Kein Zugriff auf diese Fahrt!");
+        var deleted = _service.Delete(id);
+        return deleted ? NoContent() : NotFound();
     }
 
     [HttpPost]
-    public IActionResult Create(TripCreateDto dto)
+    [Authorize(Roles = "Admin,User")]
+    public async Task<IActionResult> Create(TripCreateDto dto)
     {
         try
         {
-            var username = _userContext.GetUsername();
-            var role = _userContext.GetRole();
+            await _userSyncService.SyncUserFromKeycloak(User);
+            var user = await _userSyncService.GetUserFromKeycloak(User);
 
             var trip = new Trip
             {
@@ -85,10 +86,10 @@ public class TripsController : ControllerBase
                 StartLocation = dto.StartLocation,
                 EndLocation = dto.EndLocation,
                 VehicleId = dto.VehicleId,
-                UserId = dto.UserId ?? 0 //nur für admin
+                UserId = user.Id
             };
 
-            var created = _service.AddForUser(trip, username!, role!);
+            var created = _service.Add(trip);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (Exception ex)
@@ -96,4 +97,6 @@ public class TripsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    
 }
