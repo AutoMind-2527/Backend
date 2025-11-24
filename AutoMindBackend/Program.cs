@@ -1,118 +1,101 @@
-using System.Security.Claims;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using AutoMindBackend.Data;
-using AutoMindBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using AutoMindBackend.Data;
+using AutoMindBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- CONTROLLERS + JSON (Zyklen ignorieren) ---
+// ---------- Controllers + JSON (Zyklen vermeiden) ----------
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
     {
-        // Funktioniert in allen .NET Versionen:
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.WriteIndented = false;
+        options.JsonSerializerOptions.WriteIndented = true;
     });
 
-// --- DATABASE ---
+// ---------- DB-Context ----------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=automind.db"));
 
-// --- KEYCLOAK AUTHENTICATION ---
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+// ---------- eigene Services ----------
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<VehicleService>();
+builder.Services.AddScoped<TripService>();
+builder.Services.AddScoped<GpsService>();
+builder.Services.AddScoped<UserSyncService>();
+builder.Services.AddScoped<DataSeeder>();
+
+// ---------- Auth / Keycloak ----------
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.MetadataAddress =
-            $"{builder.Configuration["Keycloak:Authority"]}/.well-known/openid-configuration";
-
+        options.Authority = "http://localhost:8080/realms/automind-realm";
         options.RequireHttpsMetadata = false;
 
+        // Audience-Check aus, damit "audience empty" nicht crasht
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false,
-            ValidateIssuer = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            RoleClaimType = "roles"
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnTokenValidated = context =>
-            {
-                var identity = context.Principal!.Identity as ClaimsIdentity;
-                if (identity == null)
-                    return Task.CompletedTask;
-
-                var preferredUsername = identity.FindFirst("preferred_username")?.Value;
-                if (!string.IsNullOrWhiteSpace(preferredUsername))
-                {
-                    identity.AddClaim(new Claim(ClaimTypes.Name, preferredUsername));
-                }
-
-                var realmAccess = identity.FindFirst("realm_access")?.Value;
-                if (!string.IsNullOrWhiteSpace(realmAccess))
-                {
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(realmAccess);
-                        if (doc.RootElement.TryGetProperty("roles", out var rolesElement))
-                        {
-                            foreach (var role in rolesElement.EnumerateArray())
-                            {
-                                var r = role.GetString();
-                                if (!string.IsNullOrWhiteSpace(r))
-                                    identity.AddClaim(new Claim("roles", r));
-                            }
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }
-
-                return Task.CompletedTask;
-            }
+            ValidateAudience = false
         };
     });
 
-builder.Services.AddAuthorization();
+// ---------- CORS für Angular-Frontend ----------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://localhost:4200", // Angular
+                "http://localhost:5191", // Swagger / Backend
+                "http://localhost:8080"  // Keycloak
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
-// --- SWAGGER / OPENAPI ---
+// ---------- Swagger + Keycloak Login ----------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "AutoMind API",
-        Version = "v1",
-        Description = "AutoMind Backend API with Keycloak Authentication"
+        Title = "AutoMind Backend API",
+        Version = "v1"
     });
 
-    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    // OAuth2 / OpenID Connect mit Keycloak
+    var oauthScheme = new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.OAuth2,
+        Scheme = "Bearer",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
         Flows = new OpenApiOAuthFlows
         {
-            Password = new OpenApiOAuthFlow
+            AuthorizationCode = new OpenApiOAuthFlow
             {
-                TokenUrl = new Uri(
-                    $"{builder.Configuration["Keycloak:Authority"]}/protocol/openid-connect/token"),
+                AuthorizationUrl = new Uri("http://localhost:8080/realms/automind-realm/protocol/openid-connect/auth"),
+                TokenUrl = new Uri("http://localhost:8080/realms/automind-realm/protocol/openid-connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
-                    { "openid", "OpenID Connect" },
-                    { "profile", "User Profile" },
-                    { "email", "Email Address" }
+                    { "openid", "OpenID" },
+                    { "profile", "Profil" },
+                    { "email", "E-Mail" }
                 }
             }
         }
-    });
+    };
+
+    c.AddSecurityDefinition("oauth2", oauthScheme);
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -130,52 +113,37 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// --- SERVICES ---
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<UserSyncService>();
-builder.Services.AddScoped<TripService>();
-builder.Services.AddScoped<VehicleService>();
-builder.Services.AddScoped<GpsService>();
-
-// --- CORS ---
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
-
 var app = builder.Build();
 
+// ---------- DB erstellen + Seed-Daten ----------
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    context.Database.EnsureCreated();
+
+    var seeder = services.GetService<DataSeeder>();
+    seeder?.SeedData();
+}
+
+// ---------- Middleware-Pipeline ----------
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
-
-        c.OAuthClientId("automind-backend");
-        c.OAuthClientSecret(builder.Configuration["Keycloak:ClientSecret"]);
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind Backend API V1");
+        c.OAuthClientId("automind-backend");   // Keycloak-Client für Backend
         c.OAuthUsePkce();
-        c.OAuthAppName("AutoMind API");
-
-        c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+        c.OAuthScopes("openid", "profile", "email");
     });
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
-}
+app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
