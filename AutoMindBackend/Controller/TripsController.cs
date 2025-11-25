@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // Nur eingeloggte Benutzer
+[Authorize] 
 public class TripsController : ControllerBase
 {
     private readonly TripService _service;
@@ -19,27 +19,23 @@ public class TripsController : ControllerBase
         _userSyncService = userSyncService;
     }
 
-    // GET /api/Trips
+    
     [HttpGet]
-    [Authorize(Roles = "Admin,User")] // Rollen von Keycloak
+    [Authorize(Roles = "Admin,User")] 
     public async Task<IActionResult> GetAll()
     {
-        // User in lokaler DB synchronisieren und laden
         await _userSyncService.SyncUserFromKeycloak(User);
         var user = await _userSyncService.GetUserFromKeycloak(User);
 
         if (User.IsInRole("Admin"))
         {
-            // Admin sieht alle Trips
             return Ok(_service.GetAll());
         }
 
-        // Normale User sehen nur eigene Trips (über UserId)
         var trips = _service.GetAllByUserId(user.Id);
         return Ok(trips);
     }
 
-    // GET /api/Trips/{id}
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetById(int id)
@@ -61,7 +57,6 @@ public class TripsController : ControllerBase
         return Ok(trip);
     }
 
-    // GET /api/Trips/vehicle/{vehicleId}
     [HttpGet("vehicle/{vehicleId}")]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetByVehicle(int vehicleId)
@@ -78,16 +73,14 @@ public class TripsController : ControllerBase
         return Ok(trips);
     }
 
-    // DELETE /api/Trips/{id}  -> nur Admin
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")] // Nur Admin darf löschen
+    [Authorize(Roles = "Admin")] 
     public IActionResult Delete(int id)
     {
         var deleted = _service.Delete(id);
         return deleted ? NoContent() : NotFound();
     }
 
-    // POST /api/Trips
     [HttpPost]
     [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> Create(TripCreateDto dto)
@@ -105,7 +98,7 @@ public class TripsController : ControllerBase
                 StartLocation = dto.StartLocation,
                 EndLocation = dto.EndLocation,
                 VehicleId = dto.VehicleId,
-                UserId = user.Id  // WICHTIG: Trip gehört diesem DB-User
+                UserId = user.Id  
             };
 
             var created = _service.Add(trip);

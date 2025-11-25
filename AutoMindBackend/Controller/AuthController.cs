@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // Nur eingeloggte Benutzer
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly UserSyncService _userSyncService;
@@ -24,12 +24,13 @@ public class AuthController : ControllerBase
         {
             // Benutzer aus Keycloak-Token synchronisieren
             var user = await _userSyncService.SyncUserFromKeycloak(User);
-            return Ok(new { 
-                user.Id, 
-                user.Username, 
+            return Ok(new
+            {
+                user.Id,
+                user.Username,
                 user.Role,
                 user.Email,
-                Message = "Benutzer erfolgreich synchronisiert" 
+                Message = "Benutzer erfolgreich synchronisiert"
             });
         }
         catch (Exception ex)
@@ -42,13 +43,26 @@ public class AuthController : ControllerBase
     public IActionResult GetCurrentUser()
     {
         var userId = User.FindFirst("sub")?.Value; // Keycloak User ID
-        var username = User.FindFirst(ClaimTypes.Name)?.Value;
-        var role = User.FindFirst("roles")?.Value ?? "User"; // Keycloak Rollen-Claim
-        var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        
-        return Ok(new { 
+
+        var username =
+            User.FindFirst(ClaimTypes.Name)?.Value ??
+            User.FindFirst("preferred_username")?.Value;
+
+        var email =
+            User.FindFirst(ClaimTypes.Email)?.Value ??
+            User.FindFirst("email")?.Value;
+
+        // Admin-Rolle prüfen: gibt es einen Role-Claim mit Wert "Admin"?
+        var isAdmin = User.Claims.Any(c =>
+            (c.Type == ClaimTypes.Role || c.Type == "role") &&
+            c.Value == "Admin");
+
+        var role = isAdmin ? "Admin" : "User";
+
+        return Ok(new
+        {
             KeycloakId = userId,
-            Username = username, 
+            Username = username,
             Role = role,
             Email = email
         });

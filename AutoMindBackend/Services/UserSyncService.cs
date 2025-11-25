@@ -43,14 +43,22 @@ public class UserSyncService
         return username;
     }
 
+    private static string GetRole(ClaimsPrincipal userPrincipal)
+    {
+        // Prüfen, ob ein Role-Claim "Admin" existiert
+        var isAdmin = userPrincipal.Claims.Any(c =>
+            (c.Type == ClaimTypes.Role || c.Type == "role") &&
+            c.Value == "Admin");
+
+        return isAdmin ? "Admin" : "User";
+    }
+
     public async Task<User> SyncUserFromKeycloak(ClaimsPrincipal userPrincipal)
     {
         var keycloakUserId = GetKeycloakUserId(userPrincipal);
         var username = GetUsername(userPrincipal);
         var email = userPrincipal.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
-
-        // eine Rolle aus dem "roles"-Claim – optional, default "User"
-        var role = userPrincipal.FindFirst("roles")?.Value ?? "User";
+        var role = GetRole(userPrincipal);
 
         var existingUser = await _context.Users
             .FirstOrDefaultAsync(u => u.KeycloakId == keycloakUserId);
@@ -60,6 +68,7 @@ public class UserSyncService
             existingUser.Username = username;
             existingUser.Email = email;
             existingUser.Role = role;
+
             await _context.SaveChangesAsync();
             return existingUser;
         }

@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +10,9 @@ using AutoMindBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---------- Controllers + JSON (Zyklen vermeiden) ----------
+// ----------------------------------------------------
+// JSON Serializer Config
+// ----------------------------------------------------
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
@@ -17,20 +21,15 @@ builder.Services
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
-// ---------- DB-Context ----------
+// ----------------------------------------------------
+// Database
+// ----------------------------------------------------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=automind.db"));
 
-// ---------- eigene Services ----------
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<VehicleService>();
-builder.Services.AddScoped<TripService>();
-builder.Services.AddScoped<GpsService>();
-builder.Services.AddScoped<UserSyncService>();
-builder.Services.AddScoped<DataSeeder>();
-
-// ---------- Auth / Keycloak ----------
+// ----------------------------------------------------
+// Keycloak Authentication (JWT Bearer)
+// ----------------------------------------------------
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -38,64 +37,95 @@ builder.Services
         options.Authority = "http://localhost:8080/realms/automind-realm";
         options.RequireHttpsMetadata = false;
 
-        // Audience-Check aus, damit "audience empty" nicht crasht
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false
+            ValidateIssuer = true,
+            // Audience-Check erstmal aus, damit der "empty audience"-Fehler weg ist
+            ValidateAudience = false,
+            // Username aus Keycloak
+            NameClaimType = "preferred_username",
+            // Wir erzeugen eigene Role-Claims
+            RoleClaimType = ClaimTypes.Role
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var identity = context.Principal?.Identity as ClaimsIdentity;
+                if (identity == null)
+                    return Task.CompletedTask;
+
+                // ---------- Rollen aus realm_access.roles ----------
+                var realmAccessClaim = context.Principal.FindFirst("realm_access");
+                if (realmAccessClaim?.Value is string realmAccessJson)
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(realmAccessJson);
+                        if (doc.RootElement.TryGetProperty("roles", out var rolesElement) &&
+                            rolesElement.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var roleElement in rolesElement.EnumerateArray())
+                            {
+                                var roleName = roleElement.GetString();
+                                if (!string.IsNullOrWhiteSpace(roleName))
+                                {
+                                    // z.B. "Admin" oder "User"
+                                    identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
+                                }
+                            }
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // falls Keycloak hier mal etwas Unerwartetes liefert -> ignorieren
+                    }
+                }
+
+                // ---------- Username als Name setzen ----------
+                var preferredUsername =
+                    context.Principal.FindFirst("preferred_username")?.Value;
+
+                if (!string.IsNullOrWhiteSpace(preferredUsername))
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Name, preferredUsername));
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
-// ---------- CORS für Angular-Frontend ----------
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:4200", // Angular
-                "http://localhost:5191", // Swagger / Backend
-                "http://localhost:8080"  // Keycloak
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
-// ---------- Swagger + Keycloak Login ----------
+// ----------------------------------------------------
+// Swagger – OAuth2 (Password Flow) gegen Keycloak
+// ----------------------------------------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "AutoMind Backend API",
+        Title   = "AutoMind API",
         Version = "v1"
     });
 
-    // OAuth2 / OpenID Connect mit Keycloak
-    var oauthScheme = new OpenApiSecurityScheme
+    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
-        Type = SecuritySchemeType.OAuth2,
-        Scheme = "Bearer",
-        In = ParameterLocation.Header,
-        Name = "Authorization",
+        Type  = SecuritySchemeType.OAuth2,
         Flows = new OpenApiOAuthFlows
         {
-            AuthorizationCode = new OpenApiOAuthFlow
+            Password = new OpenApiOAuthFlow
             {
-                AuthorizationUrl = new Uri("http://localhost:8080/realms/automind-realm/protocol/openid-connect/auth"),
                 TokenUrl = new Uri("http://localhost:8080/realms/automind-realm/protocol/openid-connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
-                    { "openid", "OpenID" },
-                    { "profile", "Profil" },
-                    { "email", "E-Mail" }
+                    { "openid",  "OpenID Connect" },
+                    { "profile", "User Profile" },
+                    { "email",   "User Email" }
                 }
             }
         }
-    };
-
-    c.AddSecurityDefinition("oauth2", oauthScheme);
+    });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -105,7 +135,7 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "oauth2"
+                    Id   = "oauth2"
                 }
             },
             new[] { "openid", "profile", "email" }
@@ -113,36 +143,70 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ----------------------------------------------------
+// Services
+// ----------------------------------------------------
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<VehicleService>();
+builder.Services.AddScoped<TripService>();
+builder.Services.AddScoped<GpsService>();
+builder.Services.AddScoped<UserSyncService>();
+builder.Services.AddScoped<DataSeeder>();
+
+// ----------------------------------------------------
+// CORS
+// ----------------------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+    );
+});
+
 var app = builder.Build();
 
-// ---------- DB erstellen + Seed-Daten ----------
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated();
-
-    var seeder = services.GetService<DataSeeder>();
-    seeder?.SeedData();
-}
-
-// ---------- Middleware-Pipeline ----------
+// ----------------------------------------------------
+// Development Mode
+// ----------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind Backend API V1");
-        c.OAuthClientId("automind-backend");   // Keycloak-Client für Backend
-        c.OAuthUsePkce();
-        c.OAuthScopes("openid", "profile", "email");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API");
+
+        // Keycloak OAuth2 Settings für Swagger-Login
+        c.OAuthClientId("automind-backend");
+        c.OAuthClientSecret(builder.Configuration["Keycloak:ClientSecret"]);
+        c.OAuthAppName("AutoMind Backend");
+
+        // Authorization bleibt nach Refresh erhalten
+        c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
     });
 }
 
+// ----------------------------------------------------
+// DB Init (EnsureCreated + Seed)
+// ----------------------------------------------------
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+
+    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+    seeder.SeedData();
+}
+
+// ----------------------------------------------------
+// Middleware
+// ----------------------------------------------------
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend");
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
