@@ -27,11 +27,30 @@ public class VehiclesController : ControllerBase
         await _userSyncService.SyncUserFromKeycloak(User);
         var user = await _userSyncService.GetUserFromKeycloak(User);
 
+        // Erst die Vehicles laden – je nach Rolle unterschiedlich
+        List<Vehicle> vehicles;
         if (User.IsInRole("Admin"))
-            return Ok(_service.GetAll());
+        {
+            vehicles = _service.GetAll();
+        }
+        else
+        {
+            vehicles = _service.GetAllByUserId(user.Id);
+        }
 
-        // User sieht nur seine eigenen Fahrzeuge (über UserId)
-        return Ok(_service.GetAllByUserId(user.Id));
+        // Dann in DTOs mappen (ohne Trips[], ohne User usw.)
+        var result = vehicles.Select(v => new VehicleDto
+        {
+            Id = v.Id,
+            LicensePlate = v.LicensePlate,
+            Brand = v.Brand,
+            Model = v.Model,
+            Mileage = v.Mileage,
+            FuelConsumption = v.FuelConsumption
+        });
+
+        // Nur EIN return
+        return Ok(result);
     }
 
     // GET /api/Vehicles/{id}

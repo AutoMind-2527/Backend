@@ -19,22 +19,41 @@ public class TripsController : ControllerBase
         _userSyncService = userSyncService;
     }
 
-    
+
     [HttpGet]
-    [Authorize(Roles = "Admin,User")] 
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetAll()
     {
         await _userSyncService.SyncUserFromKeycloak(User);
         var user = await _userSyncService.GetUserFromKeycloak(User);
 
+        // 1. Trips holen je nach Rolle
+        List<Trip> trips;
         if (User.IsInRole("Admin"))
         {
-            return Ok(_service.GetAll());
+            trips = _service.GetAll();
+        }
+        else
+        {
+            trips = _service.GetAllByUserId(user.Id);
         }
 
-        var trips = _service.GetAllByUserId(user.Id);
-        return Ok(trips);
+        // 2. In DTO umwandeln (kein Vehicle{}, kein User{}, keine Navigation)
+        var result = trips.Select(t => new TripDto
+        {
+            Id = t.Id,
+            StartTime = t.StartTime,
+            EndTime = t.EndTime,
+            DistanceKm = t.DistanceKm,
+            StartLocation = t.StartLocation,
+            EndLocation = t.EndLocation,
+            VehicleId = t.VehicleId
+        });
+
+        // 3. EIN return
+        return Ok(result);
     }
+
 
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,User")]
