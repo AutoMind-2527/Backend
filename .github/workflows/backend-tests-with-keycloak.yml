@@ -1,0 +1,53 @@
+name: Backend Tests with Keycloak
+
+on:
+  workflow_dispatch:   # manuell auslösbar
+  push:
+    branches: [ main ]
+    paths:
+      - 'Backend/**'
+
+jobs:
+  test-with-keycloak:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Start Keycloak + Postgres via Docker Compose
+        run: |
+          docker compose -f Backend/docker-compose.keycloak.yml up -d
+          
+      - name: Wait for Keycloak to be ready
+        run: |
+          echo "Warte auf Keycloak..."
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8090 > /dev/null; then
+              echo "Keycloak ist bereit ✅"
+              exit 0
+            fi
+            echo "Keycloak noch nicht bereit, Versuch $i/30..."
+            sleep 5
+          done
+          echo " Keycloak ist nicht gestartet"
+          docker compose -f Backend/docker-compose.keycloak.yml logs
+          exit 1
+
+      - name: Restore
+        run: dotnet restore Backend/AutoMindBackend/AutoMindBackend.csproj
+
+      - name: Build
+        run: dotnet build Backend/AutoMindBackend/AutoMindBackend.csproj --configuration Release --no-restore
+
+      - name: Test (mit laufendem Keycloak)
+        run: dotnet test Backend/AutoMindBackend.Tests/AutoMindBackend.Tests.csproj --configuration Release --no-build
+
+      - name: Stop Keycloak + Postgres
+        if: always()
+        run: docker compose -f Backend/docker-compose.keycloak.yml down
