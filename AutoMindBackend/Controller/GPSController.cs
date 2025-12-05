@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using AutoMindBackend.Services;
 using Microsoft.AspNetCore.Authorization;
+using AutoMindBackend.Services;
 
 namespace AutoMindBackend.Controllers;
 
@@ -16,19 +16,61 @@ public class GpsController : ControllerBase
         _gpsService = gpsService;
     }
 
-    [HttpPost("simulate-trip")]
+    /// <summary>
+    /// Gerät schickt alle ~30 Sekunden einen GPS-Punkt.
+    /// </summary>
+    [HttpPost]
     [Authorize(Roles = "Admin,User")]
-    public IActionResult SimulateTrip([FromQuery] int vehicleId, [FromQuery] double startLat, [FromQuery] double startLon, [FromQuery] double endLat, [FromQuery] double endLon)
+    public async Task<IActionResult> PushGpsPoint([FromBody] GpsPointCreateDto dto)
     {
-        var trip = _gpsService.CreateTripFromGps(startLat, startLon, endLat, endLon, vehicleId);
-        return Ok(trip);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        await _gpsService.AddGpsPointAsync(
+            dto.VehicleId,
+            dto.Latitude,
+            dto.Longitude,
+            dto.SpeedKmh
+        );
+
+        return Ok(new { message = "GPS point stored" });
     }
 
+    /// <summary>
+    /// Alle GPS-Daten sehen (nur Admin, Debug).
+    /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin")] // Nur Admin darf alle GPS-Daten sehen
-    public IActionResult GetAll()
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAll()
     {
-        var gpsData = _gpsService.GetAllGpsData();
+        var gpsData = await _gpsService.GetAllGpsDataAsync();
         return Ok(gpsData);
     }
+
+    /// <summary>
+    /// Trip nur simulieren (wird NICHT in DB gespeichert).
+    /// </summary>
+    [HttpGet("simulate-trip")]
+    [Authorize(Roles = "Admin,User")]
+    public IActionResult SimulateTrip(
+        [FromQuery] int vehicleId,
+        [FromQuery] double startLat,
+        [FromQuery] double startLon,
+        [FromQuery] double endLat,
+        [FromQuery] double endLon)
+    {
+        var tripPreview = _gpsService.CreateTripFromGps(startLat, startLon, endLat, endLon, vehicleId);
+        return Ok(tripPreview);
+    }
+}
+
+/// <summary>
+/// DTO, das dein Gerät an die API schickt.
+/// </summary>
+public class GpsPointCreateDto
+{
+    public int VehicleId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double? SpeedKmh { get; set; }
 }

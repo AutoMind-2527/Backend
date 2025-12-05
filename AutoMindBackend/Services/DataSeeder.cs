@@ -1,42 +1,39 @@
+using AutoMindBackend.Data;
 using AutoMindBackend.Models;
 
 namespace AutoMindBackend.Services;
 
 public class DataSeeder
 {
-    private readonly VehicleService _vehicleService;
-    private readonly TripService _tripService;
+    private readonly AppDbContext _context;
 
-    public DataSeeder(VehicleService vehicleService, TripService tripService)
+    public DataSeeder(AppDbContext context)
     {
-        _vehicleService = vehicleService;
-        _tripService = tripService;
+        _context = context;
     }
 
     public void SeedData()
     {
-        if (!_vehicleService.GetAll().Any())
+        // Wenn schon User existieren -> nichts machen
+        if (_context.Users.Any())
+            return;
+
+        // Admin-User anlegen (für Keycloak-Sync ist der KeycloakId-Wert egal,
+        // wichtig ist nur, dass ein Admin existiert, falls du ihn brauchst)
+        var admin = new User
         {
-            var car = _vehicleService.Add(new Vehicle
-            {
-                LicensePlate = "L-111AA",
-                Brand = "BMW",
-                Model = "i4",
-                Mileage = 12000,
-                FuelConsumption = 16.5
-            });
+            KeycloakId = "admin-keycloak-id",
+            Username = "admin",
+            Email = "admin@automind.com",
+            Role = "Admin",
+            PasswordHash = "",
+            PasswordSalt = ""
+        };
 
-            _tripService.Add(new Trip
-            {
-                StartTime = DateTime.Now.AddHours(-3),
-                EndTime = DateTime.Now.AddHours(-2),
-                DistanceKm = 80,
-                StartLocation = "Linz",
-                EndLocation = "Wien",
-                VehicleId = car.Id
-            });
+        _context.Users.Add(admin);
+        _context.SaveChanges();
 
-            Console.WriteLine("Beispiel-Daten erfolgreich eingefügt!");
-        }
+        // KEINE Vehicles / Trips hier seeden -> sonst FK-Probleme,
+        // weil wir keine gültigen UserIds / Keycloak-User haben.
     }
 }

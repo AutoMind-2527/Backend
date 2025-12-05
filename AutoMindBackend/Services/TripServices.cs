@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using AutoMindBackend.Data;
 using AutoMindBackend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AutoMindBackend.Services;
 
@@ -14,58 +15,75 @@ public class TripService
     }
 
     // Admin: alle Trips
-    public List<Trip> GetAll()
+    public List<TripDto> GetAll()
     {
         return _context.Trips
-            .Include(t => t.User)
             .Include(t => t.Vehicle)
+            .Include(t => t.User)
+            .OrderByDescending(t => t.StartTime)
+            .Select(t => t.ToDto())
             .ToList();
     }
 
-    // User: alle eigenen Trips über UserId
-    public List<Trip> GetAllByUserId(int userId)
+    // Alle Trips eines Users
+    public List<TripDto> GetAllByUserId(int userId)
     {
         return _context.Trips
-            .Include(t => t.User)
-            .Include(t => t.Vehicle)
             .Where(t => t.UserId == userId)
+            .Include(t => t.Vehicle)
+            .Include(t => t.User)
+            .OrderByDescending(t => t.StartTime)
+            .Select(t => t.ToDto())
             .ToList();
     }
 
-    public Trip? GetById(int id)
+    // Trip nach Id
+    public TripDto? GetById(int id)
     {
-        return _context.Trips
-            .Include(t => t.User)
+        var trip = _context.Trips
             .Include(t => t.Vehicle)
+            .Include(t => t.User)
             .FirstOrDefault(t => t.Id == id);
+
+        return trip?.ToDto();
     }
 
-    public Trip? GetByIdAndUserId(int id, int userId)
+    // Trip nach Id + UserId (damit User nur seine Trips sieht)
+    public TripDto? GetByIdAndUserId(int id, int userId)
     {
-        return _context.Trips
-            .Include(t => t.User)
+        var trip = _context.Trips
             .Include(t => t.Vehicle)
+            .Include(t => t.User)
             .FirstOrDefault(t => t.Id == id && t.UserId == userId);
+
+        return trip?.ToDto();
     }
 
-    public List<Trip> GetByVehicleId(int vehicleId)
+    // Trips nach VehicleId
+    public List<TripDto> GetByVehicleId(int vehicleId)
     {
         return _context.Trips
-            .Include(t => t.User)
-            .Include(t => t.Vehicle)
             .Where(t => t.VehicleId == vehicleId)
+            .Include(t => t.Vehicle)
+            .Include(t => t.User)
+            .OrderByDescending(t => t.StartTime)
+            .Select(t => t.ToDto())
             .ToList();
     }
 
-    public List<Trip> GetByVehicleIdAndUserId(int vehicleId, int userId)
+    // Trips eines Users nach VehicleId
+    public List<TripDto> GetByVehicleIdAndUserId(int vehicleId, int userId)
     {
         return _context.Trips
-            .Include(t => t.User)
-            .Include(t => t.Vehicle)
             .Where(t => t.VehicleId == vehicleId && t.UserId == userId)
+            .Include(t => t.Vehicle)
+            .Include(t => t.User)
+            .OrderByDescending(t => t.StartTime)
+            .Select(t => t.ToDto())
             .ToList();
     }
 
+    // Trip anlegen (wird z.B. vom Controller benutzt, oder DataSeeder)
     public Trip Add(Trip trip)
     {
         _context.Trips.Add(trip);
@@ -73,6 +91,7 @@ public class TripService
         return trip;
     }
 
+    // Trip löschen
     public bool Delete(int id)
     {
         var trip = _context.Trips.Find(id);
@@ -81,5 +100,23 @@ public class TripService
         _context.Trips.Remove(trip);
         _context.SaveChanges();
         return true;
+    }
+}
+
+// Mapping-Erweiterung: Trip -> TripDto
+public static class TripMappingExtensions
+{
+    public static TripDto ToDto(this Trip trip)
+    {
+        return new TripDto
+        {
+            Id = trip.Id,
+            StartTime = trip.StartTime,
+            EndTime = trip.EndTime ?? trip.StartTime, // EndTime ist DateTime? im Model
+            DistanceKm = trip.DistanceKm,
+            StartLocation = trip.StartLocation,
+            EndLocation = trip.EndLocation,
+            VehicleId = trip.VehicleId
+        };
     }
 }
