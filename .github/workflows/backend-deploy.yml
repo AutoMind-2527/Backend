@@ -2,7 +2,7 @@ name: Backend(DemoSyp) Docker (for LeoCloud)
 
 env:
   ContainerName: backend        # Name of the (docker-)container
-  SolutionPath: Backend            # sub-directory of sln file location
+  SolutionPath: AutoMindBackend            # sub-directory of sln file location
   CloudNameSpace: student-if220129
   AppPrefix: 
   
@@ -36,8 +36,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           #context: "{{defaultContext}}:Src"
-          context: ./Backend
-          file: ./Backend/WebApi/Dockerfile
+          context: ./AutoMindBackend
+          file: ./Dockerfile
           push: true
           tags: ${{ github.actor }}/${{ env.ContainerName}}:latest
 
