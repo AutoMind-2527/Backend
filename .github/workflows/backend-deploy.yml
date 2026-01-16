@@ -30,7 +30,14 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}   
+          password: ${{ secrets.GITHUB_TOKEN }}  
+      
+      - name: Show repo files
+        run: |
+          pwd
+          ls -la
+          ls -la AutoMindBackend || true
+          ls -la Backend || true 
   
       - name: Set lowercase owner
         id: vars
