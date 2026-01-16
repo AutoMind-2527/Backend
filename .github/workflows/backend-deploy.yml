@@ -49,7 +49,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/${{ env.ContainerName }}:latest
+          tags: ghcr.io/andrejnedic/${{ env.ContainerName }}:latest
 
       - uses: actions-hub/kubectl@master
         env:
