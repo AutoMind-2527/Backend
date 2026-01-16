@@ -61,12 +61,16 @@ public class GpsService
                 VehicleId = vehicleId,
                 UserId = vehicle.UserId,
                 StartTime = now,
-                StartLocation = $"{lat},{lon}"
+                // WICHTIG: EndTime direkt setzen, damit DB kein NULL sieht
+                EndTime = now,
+                StartLocation = $"{lat},{lon}",
+                EndLocation = $"{lat},{lon}" // optional, wird später eh überschrieben
             };
 
             _context.Trips.Add(openTrip);
             await _context.SaveChangesAsync();
         }
+
 
         // neuen GPS-Punkt speichern
         var gps = new GpsData
@@ -95,7 +99,7 @@ public class GpsService
 
     /// <summary>
     /// Reiner Simulations-Endpoint, speichert nichts in der DB,
-    /// berechnet nur eine einfache Distanz & "Trip-Preview".
+    /// berechnet nur eine einfache Distanz "Trip-Preview".
     /// </summary>
     public object CreateTripFromGps(double startLat, double startLon, double endLat, double endLon, int vehicleId)
     {
