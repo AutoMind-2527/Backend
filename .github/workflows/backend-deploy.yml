@@ -35,11 +35,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          #context: "{{defaultContext}}:Src"
-          context: ./AutoMindBackend
-          file: ./Dockerfile
+          context: ./Backend
+          file: .Backend/Dockerfile
           push: true
-          tags: ${{ github.actor }}/${{ env.ContainerName}}:latest
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.ContainerName }}:latest
 
       - uses: actions-hub/kubectl@master
         env:
