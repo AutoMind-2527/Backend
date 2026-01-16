@@ -46,8 +46,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./Backend
-          file: ./Backend/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/${{ env.ContainerName }}:latest
 
@@ -79,4 +79,4 @@ jobs:
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         with:
-          args: create -f ./LeoCloud/deployment.yaml
+          args: create -f ./Leocloud/deployment.yaml
