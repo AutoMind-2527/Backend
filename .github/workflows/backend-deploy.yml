@@ -31,14 +31,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}   
-          
+  
+      - name: Set lowercase owner
+        id: vars
+        run: echo "owner_lc=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ./Backend
-          file: .Backend/Dockerfile
+          file: ./Backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.ContainerName }}:latest
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lc }}/${{ env.ContainerName }}:latest
 
       - uses: actions-hub/kubectl@master
         env:
