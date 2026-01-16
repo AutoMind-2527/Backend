@@ -30,7 +30,7 @@ jobs:
         with:
           registry: ghcr.io
           username: andrejnedic
-          password: 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
+          password: ${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}
 
       - name: Show repo files
         run: |
