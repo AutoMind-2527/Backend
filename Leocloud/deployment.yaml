@@ -5,7 +5,7 @@ metadata:
   namespace: student-if220129
 type: kubernetes.io/dockerconfigjson
 data:
-  .dockerconfigjson: {{secret.dockerconfig}}
+  .dockerconfigjson: {{secrets.dockerconfig}}
 ---
 apiVersion: apps/v1
 kind: Deployment
