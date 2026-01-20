@@ -177,7 +177,7 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API");
+        c.SwaggerEndpoint("api/swagger/v1/swagger.json", "AutoMind API");
 
         // Keycloak OAuth2 Settings für Swagger-Login
         c.OAuthClientId("automind-backend");
