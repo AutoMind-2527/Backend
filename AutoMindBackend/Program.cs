@@ -171,7 +171,7 @@ var app = builder.Build();
 // ----------------------------------------------------
 // Development Mode
 // ----------------------------------------------------
-if (app.Environment.IsDevelopment())
+if (/*app.Environment.IsDevelopment()*/ true)
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
