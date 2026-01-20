@@ -20,10 +20,10 @@ spec:
           ports:
             - containerPort: 8080
 	  env:
-  	    - name: DOTNET_USE_POLLING_FILE_WATCHER
-    	      value: "1"
-	    - name: ASPNETCORE_ENVIRONMENT
-	      value: "Production"
+            - name: DOTNET_USE_POLLING_FILE_WATCHER
+              value: "1"
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
       imagePullSecrets:
         - name: ghcr-secret
 ---
