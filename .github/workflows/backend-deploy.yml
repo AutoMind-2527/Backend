@@ -59,9 +59,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile
+          file: .AutomindBackend/Dockerfile
           push: true
-          tags: ghcr.io/andrejnedic/${{ env.ContainerName }}:latest
+          tags: ghcr.io/automind-2527/${{ env.ContainerName }}:latest
 
       - uses: actions-hub/kubectl@master
         env:
