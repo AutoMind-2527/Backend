@@ -55,7 +55,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
-    - host: if2201291.cloud.htl-leonding.ac.at
+    - host: if220129.cloud.htl-leonding.ac.at
       http:
         paths:
           - path: /api(/|$)(.*)
