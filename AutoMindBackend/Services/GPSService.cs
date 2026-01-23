@@ -61,15 +61,20 @@ public class GpsService
                 VehicleId = vehicleId,
                 UserId = vehicle.UserId,
                 StartTime = now,
-                // WICHTIG: EndTime direkt setzen, damit DB kein NULL sieht
-                EndTime = now,
+                EndTime = null,
                 StartLocation = $"{lat},{lon}",
-                EndLocation = $"{lat},{lon}" // optional, wird später eh überschrieben
+                EndLocation = $"{lat},{lon}"
             };
+
 
             _context.Trips.Add(openTrip);
             await _context.SaveChangesAsync();
         }
+
+
+        // ✅ IMMER den letzten Punkt als EndLocation setzen
+        openTrip.EndLocation = $"{lat},{lon}";
+        await _context.SaveChangesAsync();
 
 
         // neuen GPS-Punkt speichern
