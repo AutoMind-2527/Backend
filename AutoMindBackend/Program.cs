@@ -34,7 +34,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://if220129.cloud.htl-leonding.ac.at:8080/keycloak/realms/automind-realm";
+        options.Authority = "https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm";
         options.RequireHttpsMetadata = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -116,7 +116,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             Password = new OpenApiOAuthFlow
             {
-                TokenUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at:8080/keycloak/realms/automind-realm/protocol/openid-connect/token"),
+                TokenUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm/protocol/openid-connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
                     { "openid",  "OpenID Connect" },

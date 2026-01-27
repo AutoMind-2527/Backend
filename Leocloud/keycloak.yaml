@@ -6,7 +6,7 @@ metadata:
   namespace: student-if220129
 type: Opaque
 data:
-  realm.json: ewogICJyZWFsbSI6ICJhdXRvbWluZC1yZWFsbSIsCiAgImVuYWJsZWQiOiB0cnVlLAoKICAicm9sZXMiOiB7CiAgICAicmVhbG0iOiBbCiAgICAgIHsgIm5hbWUiOiAiVXNlciIgfSwKICAgICAgeyAibmFtZSI6ICJBZG1pbiIgfQogICAgXQogIH0sCgogICJjbGllbnRzIjogWwogICAgewogICAgICAiY2xpZW50SWQiOiAiYXV0b21pbmQtYmFja2VuZCIsCiAgICAgICJlbmFibGVkIjogdHJ1ZSwKICAgICAgInByb3RvY29sIjogIm9wZW5pZC1jb25uZWN0IiwKICAgICAgInB1YmxpY0NsaWVudCI6IGZhbHNlLAogICAgICAic2VydmljZUFjY291bnRzRW5hYmxlZCI6IHRydWUsCiAgICAgICJkaXJlY3RBY2Nlc3NHcmFudHNFbmFibGVkIjogdHJ1ZSwKICAgICAgInJlZGlyZWN0VXJpcyI6IFsiaHR0cDovL2xvY2FsaG9zdDo1MTkxLyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbIioiXQogICAgfSwKICAgIHsKICAgICAgImNsaWVudElkIjogImF1dG9taW5kLWZyb250ZW5kIiwKICAgICAgImVuYWJsZWQiOiB0cnVlLAogICAgICAicHJvdG9jb2wiOiAib3BlbmlkLWNvbm5lY3QiLAogICAgICAicHVibGljQ2xpZW50IjogdHJ1ZSwKICAgICAgInJlZGlyZWN0VXJpcyI6IFsiaHR0cDovL2xvY2FsaG9zdDo0MjAwLyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbImh0dHA6Ly9sb2NhbGhvc3Q6NDIwMCJdCiAgICB9CiAgXQp9Cg==
+  realm.json: ewogICJyZWFsbSI6ICJhdXRvbWluZC1yZWFsbSIsCiAgImVuYWJsZWQiOiB0cnVlLAoKICAicm9sZXMiOiB7CiAgICAicmVhbG0iOiBbCiAgICAgIHsgIm5hbWUiOiAiVXNlciIgfSwKICAgICAgeyAibmFtZSI6ICJBZG1pbiIgfQogICAgXQogIH0sCgogICJjbGllbnRzIjogWwogICAgewogICAgICAiY2xpZW50SWQiOiAiYXV0b21pbmQtYmFja2VuZCIsCiAgICAgICJlbmFibGVkIjogdHJ1ZSwKICAgICAgInNlY3JldCI6ICJkcXFiNndEOGthTUxDSUtvSVlqbzJaQjZkUkpRb0liVSIsCiAgICAgICJwcm90b2NvbCI6ICJvcGVuaWQtY29ubmVjdCIsCiAgICAgICJwdWJsaWNDbGllbnQiOiBmYWxzZSwKICAgICAgInNlcnZpY2VBY2NvdW50c0VuYWJsZWQiOiB0cnVlLAogICAgICAiZGlyZWN0QWNjZXNzR3JhbnRzRW5hYmxlZCI6IHRydWUsCiAgICAgICJyZWRpcmVjdFVyaXMiOiBbImh0dHA6Ly9sb2NhbGhvc3Q6NTE5MS8qIiwgImh0dHBzOi8vaWYyMjAxMjkuY2xvdWQuaHRsLWxlb25kaW5nLmFjLmF0LyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbIioiXQogICAgfSwKICAgIHsKICAgICAgImNsaWVudElkIjogImF1dG9taW5kLWZyb250ZW5kIiwKICAgICAgImVuYWJsZWQiOiB0cnVlLAogICAgICAicHJvdG9jb2wiOiAib3BlbmlkLWNvbm5lY3QiLAogICAgICAicHVibGljQ2xpZW50IjogdHJ1ZSwKICAgICAgInJlZGlyZWN0VXJpcyI6IFsiaHR0cDovL2xvY2FsaG9zdDo0MjAwLyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbImh0dHA6Ly9sb2NhbGhvc3Q6NDIwMCJdCiAgICB9CiAgXSwKICAidXNlcnMiOiBbCiAgewogICAgInVzZXJuYW1lIjogImFkbWluIiwKICAgICJlbmFibGVkIjogdHJ1ZSwKICAgICJlbWFpbFZlcmlmaWVkIjogdHJ1ZSwKICAgICJjcmVkZW50aWFscyI6IFsKICAgICAgeyAidHlwZSI6ICJwYXNzd29yZCIsICJ2YWx1ZSI6ICJhZG1pbiIsICJ0ZW1wb3JhcnkiOiBmYWxzZSB9CiAgICBdLAogICAgInJlYWxtUm9sZXMiOiBbIkFkbWluIiwgIlVzZXIiXQogIH0KICBdCn0K
 ---
 
 # ----------------------------------------
@@ -47,10 +47,8 @@ spec:
               value: keycloak
             - name: KC_DB_PASSWORD
               value: keycloak
-            - name: KC_HOSTNAME
-              value: keycloak.student-if220129.svc.cluster.local
-            - name: KC_FRONTEND_URL
-              value: http://localhost:8080
+            - name: KC_HOSTNAME_URL
+              value: "https://if220129.cloud.htl-leonding.ac.at"
             - name: KC_HOSTNAME_STRICT
               value: "false"
           ports:
@@ -95,9 +93,6 @@ metadata:
   name: keycloak-ingress
   namespace: student-if220129
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: "https"
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.tls.certresolver: "http"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
