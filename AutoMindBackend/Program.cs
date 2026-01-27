@@ -34,7 +34,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "http://localhost:8080/realms/automind-realm";
+        options.Authority = "http://keycloak-service:8080/realms/automind-realm";
         options.RequireHttpsMetadata = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -116,7 +116,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             Password = new OpenApiOAuthFlow
             {
-                TokenUrl = new Uri("http://localhost:8080/realms/automind-realm/protocol/openid-connect/token"),
+                TokenUrl = new Uri("http://keycloak-service:8080/realms/automind-realm/protocol/openid-connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
                     { "openid",  "OpenID Connect" },

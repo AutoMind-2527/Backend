@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-realm-secret
+  namespace: student-if220129
+type: Opaque
+data:
+  realm.json: ewogICJyZWFsbSI6ICJhdXRvbWluZC1yZWFsbSIsCiAgImVuYWJsZWQiOiB0cnVlLAoKICAicm9sZXMiOiB7CiAgICAicmVhbG0iOiBbCiAgICAgIHsgIm5hbWUiOiAiVXNlciIgfSwKICAgICAgeyAibmFtZSI6ICJBZG1pbiIgfQogICAgXQogIH0sCgogICJjbGllbnRzIjogWwogICAgewogICAgICAiY2xpZW50SWQiOiAiYXV0b21pbmQtYmFja2VuZCIsCiAgICAgICJlbmFibGVkIjogdHJ1ZSwKICAgICAgInByb3RvY29sIjogIm9wZW5pZC1jb25uZWN0IiwKICAgICAgInB1YmxpY0NsaWVudCI6IGZhbHNlLAogICAgICAic2VydmljZUFjY291bnRzRW5hYmxlZCI6IHRydWUsCiAgICAgICJkaXJlY3RBY2Nlc3NHcmFudHNFbmFibGVkIjogdHJ1ZSwKICAgICAgInJlZGlyZWN0VXJpcyI6IFsiaHR0cDovL2xvY2FsaG9zdDo1MTkxLyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbIioiXQogICAgfSwKICAgIHsKICAgICAgImNsaWVudElkIjogImF1dG9taW5kLWZyb250ZW5kIiwKICAgICAgImVuYWJsZWQiOiB0cnVlLAogICAgICAicHJvdG9jb2wiOiAib3BlbmlkLWNvbm5lY3QiLAogICAgICAicHVibGljQ2xpZW50IjogdHJ1ZSwKICAgICAgInJlZGlyZWN0VXJpcyI6IFsiaHR0cDovL2xvY2FsaG9zdDo0MjAwLyoiXSwKICAgICAgIndlYk9yaWdpbnMiOiBbImh0dHA6Ly9sb2NhbGhvc3Q6NDIwMCJdCiAgICB9CiAgXQp9Cg==
+---
+
+# ----------------------------------------
+# Keycloak Deployment
+# ----------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: student-if220129
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:21.1.1
+          args:
+            - start-dev
+            - --import-realm
+            - --http-port=8080
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: admin
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: keycloak
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://postgres-service:5432/keycloak
+            - name: KC_DB_USERNAME
+              value: keycloak
+            - name: KC_DB_PASSWORD
+              value: keycloak
+            - name: KC_HOSTNAME
+              value: keycloak.student-if220129.svc.cluster.local
+            - name: KC_FRONTEND_URL
+              value: http://localhost:8080
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: keycloak-realm
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            - name: keycloak-data
+              mountPath: /opt/keycloak/data
+      volumes:
+        - name: keycloak-realm
+          secret:
+            secretName: keycloak-realm-secret
+        - name: keycloak-data
+          emptyDir: {}
+---
+# ----------------------------------------
+# Keycloak Service
+# ----------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-service
+  namespace: student-if220129
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+
+# ----------------------------------------
+# Keycloak Service
+# ----------------------------------------
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: student-if220129
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: "https"
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: "http"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: if220129.cloud.htl-leonding.ac.at
+      http:
+        paths:
+          - path: /keycloak(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: keycloak-service
+                port:
+                  number: 8080
