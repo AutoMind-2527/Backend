@@ -15,7 +15,7 @@
       "enabled": true,
       "secret": "dqqb6wD8kaMLCIKoIYjo2ZB6dRJQoIbU",
       "protocol": "openid-connect",
-      "publicClient": false,
+      "publicClient": true,
       "serviceAccountsEnabled": true,
       "directAccessGrantsEnabled": true,
       "redirectUris": ["http://localhost:5191/*", "https://if220129.cloud.htl-leonding.ac.at/*"],
@@ -28,7 +28,22 @@
       "publicClient": true,
       "redirectUris": ["http://localhost:4200/*"],
       "webOrigins": ["http://localhost:4200"]
-    }
+    },
+    {
+      "clientId": "automind-swagger",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+         "https://if220129.cloud.htl-leonding.ac.at/swagger/oauth2-redirect.html",
+         "https://if220129.cloud.htl-leonding.ac.at/api/swagger/oauth2-redirect.html"
+      ],
+      "webOrigins": [
+         "https://if220129.cloud.htl-leonding.ac.at"
+      ]
+  }
   ],
   "users": [
   {

@@ -48,9 +48,13 @@ spec:
             - name: KC_DB_PASSWORD
               value: keycloak
             - name: KC_HOSTNAME_URL
-              value: "https://if220129.cloud.htl-leonding.ac.at"
+              value: "https://if220129.cloud.htl-leonding.ac.at/keycloak"
             - name: KC_HOSTNAME_STRICT
               value: "false"
+            - name: KC_PROXY
+              value: "edge"
+            - name: KC_HTTP_RELATIVE_PATH
+              value: "/keycloak"
           ports:
             - containerPort: 8080
           volumeMounts:
@@ -93,16 +97,21 @@ metadata:
   name: keycloak-ingress
   namespace: student-if220129
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "8"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   ingressClassName: nginx
   rules:
     - host: if220129.cloud.htl-leonding.ac.at
       http:
         paths:
-          - path: /keycloak(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /keycloak
+            pathType: Prefix
             backend:
               service:
                 name: keycloak-service

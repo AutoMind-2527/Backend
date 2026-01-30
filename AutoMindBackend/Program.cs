@@ -116,6 +116,7 @@ builder.Services.AddSwaggerGen(c =>
         {
             Password = new OpenApiOAuthFlow
             {
+                AuthorizationUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm/protocol/openid-connect/auth"),
                 TokenUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm/protocol/openid-connect/token"),
                 Scopes = new Dictionary<string, string>
                 {
@@ -177,11 +178,11 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("v1/swagger.json", "AutoMind API");
+        c.SwaggerEndpoint("swagger/v1/swagger.json", "AutoMind API");
 
         // Keycloak OAuth2 Settings für Swagger-Login
-        c.OAuthClientId("automind-backend");
-        c.OAuthClientSecret(builder.Configuration["Keycloak:ClientSecret"]);
+        c.OAuthClientId("automind-swagger");
+        c.OAuthUsePkce();
         c.OAuthAppName("AutoMind Backend");
 
         // Authorization bleibt nach Refresh erhalten
