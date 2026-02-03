@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -29,21 +28,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=automind.db"));
 
 // ----------------------------------------------------
-// Forwarded Headers (Ingress / Reverse Proxy)
-// ----------------------------------------------------
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor |
-        ForwardedHeaders.XForwardedProto |
-        ForwardedHeaders.XForwardedHost;
-
-    // In Kubernetes/Ingress kennt ASP.NET die Proxy-IP nicht -> erlauben
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
-// ----------------------------------------------------
 // Keycloak Authentication (JWT Bearer)
 // ----------------------------------------------------
 builder.Services
@@ -56,8 +40,11 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            // Audience-Check erstmal aus, damit der "empty audience"-Fehler weg ist
             ValidateAudience = false,
+            // Username aus Keycloak
             NameClaimType = "preferred_username",
+            // Wir erzeugen eigene Role-Claims
             RoleClaimType = ClaimTypes.Role
         };
 
@@ -66,9 +53,10 @@ builder.Services
             OnTokenValidated = context =>
             {
                 var identity = context.Principal?.Identity as ClaimsIdentity;
-                if (identity == null) return Task.CompletedTask;
+                if (identity == null)
+                    return Task.CompletedTask;
 
-                // Rollen aus realm_access.roles
+                // ---------- Rollen aus realm_access.roles ----------
                 var realmAccessClaim = context.Principal.FindFirst("realm_access");
                 if (realmAccessClaim?.Value is string realmAccessJson)
                 {
@@ -94,7 +82,7 @@ builder.Services
                     }
                 }
 
-                // Username als Name setzen
+                // ---------- Username als Name setzen ----------
                 var preferredUsername = context.Principal.FindFirst("preferred_username")?.Value;
                 if (!string.IsNullOrWhiteSpace(preferredUsername))
                 {
@@ -107,10 +95,7 @@ builder.Services
     });
 
 // ----------------------------------------------------
-// Swagger
-// WICHTIG: Wir hängen Swagger explizit unter /api/swagger
-// und setzen in der OpenAPI Spec den Server auf /api,
-// damit "Try it out" auch /api/... aufruft.
+// Swagger – OAuth2 (Password Flow) gegen Keycloak
 // ----------------------------------------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -121,15 +106,23 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // Security Definition (Bearer)
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme."
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            Password = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm/protocol/openid-connect/auth"),
+                TokenUrl = new Uri("https://if220129.cloud.htl-leonding.ac.at/keycloak/realms/automind-realm/protocol/openid-connect/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    { "openid",  "OpenID Connect" },
+                    { "profile", "User Profile" },
+                    { "email",   "User Email" }
+                }
+            }
+        }
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -140,10 +133,10 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
+                    Id = "oauth2"
                 }
             },
-            Array.Empty<string>()
+            new[] { "openid", "profile", "email" }
         }
     });
 });
@@ -174,35 +167,32 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ----------------------------------------------------
-// Reverse Proxy headers MUSS vor allem anderen kommen
-// ----------------------------------------------------
-app.UseForwardedHeaders();
-
-// ----------------------------------------------------
-// Swagger immer aktiv (du hast ja true drin)
+// Development Mode
 // ----------------------------------------------------
 if (/*app.Environment.IsDevelopment()*/ true)
 {
-    // swagger.json unter /api/swagger/v1/swagger.json
+    app.UseDeveloperExceptionPage();
+
+    // ✅ WICHTIG: Swagger auf /api/swagger legen (damit es mit/ohne Ingress-Rewrite funktioniert)
     app.UseSwagger(c =>
     {
         c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
-        c.PreSerializeFilters.Add((swagger, httpReq) =>
-        {
-            // sorgt dafür, dass "Try it out" /api/... verwendet
-            swagger.Servers = new List<OpenApiServer>
-            {
-                new OpenApiServer { Url = "/api" }
-            };
-        });
     });
 
-    // Swagger UI unter /api/swagger
     app.UseSwaggerUI(c =>
     {
+        // UI wird unter /api/swagger erreichbar
         c.RoutePrefix = "api/swagger";
+
+        // Swagger JSON liegt dann unter /api/swagger/v1/swagger.json
         c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AutoMind API v1");
 
+        // Keycloak OAuth2 Settings für Swagger-Login
+        // (du nutzt eh automind-backend, damit du Tokens bekommst)
+        c.OAuthClientId("automind-backend");
+        c.OAuthAppName("AutoMind Backend");
+
+        // Authorization bleibt nach Refresh erhalten
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
     });
 }
