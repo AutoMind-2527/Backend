@@ -41,11 +41,11 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-
-            // Audience-Check aus (weil Keycloak je nach Client "aud" anders setzt)
+            // Audience-Check erstmal aus, damit der "empty audience"-Fehler weg ist
             ValidateAudience = false,
-
+            // Username aus Keycloak
             NameClaimType = "preferred_username",
+            // Wir erzeugen eigene Role-Claims
             RoleClaimType = ClaimTypes.Role
         };
 
@@ -57,7 +57,7 @@ builder.Services
                 if (identity == null)
                     return Task.CompletedTask;
 
-                // Rollen aus realm_access.roles holen
+                // ---------- Rollen aus realm_access.roles ----------
                 var realmAccessClaim = context.Principal.FindFirst("realm_access");
                 if (realmAccessClaim?.Value is string realmAccessJson)
                 {
@@ -72,6 +72,7 @@ builder.Services
                                 var roleName = roleElement.GetString();
                                 if (!string.IsNullOrWhiteSpace(roleName))
                                 {
+                                    // z.B. "Admin" oder "User"
                                     identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
                                 }
                             }
@@ -79,12 +80,14 @@ builder.Services
                     }
                     catch (JsonException)
                     {
-                        // ignorieren, falls Keycloak mal etwas Unerwartetes liefert
+                        // falls Keycloak hier mal etwas Unerwartetes liefert -> ignorieren
                     }
                 }
 
-                // Username als Name setzen
-                var preferredUsername = context.Principal.FindFirst("preferred_username")?.Value;
+                // ---------- Username als Name setzen ----------
+                var preferredUsername =
+                    context.Principal.FindFirst("preferred_username")?.Value;
+
                 if (!string.IsNullOrWhiteSpace(preferredUsername))
                 {
                     identity.AddClaim(new Claim(ClaimTypes.Name, preferredUsername));
@@ -134,7 +137,7 @@ builder.Services.AddSwaggerGen(c =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = "oauth2"
+                    Id   = "oauth2"
                 }
             },
             new[] { "openid", "profile", "email" }
@@ -161,13 +164,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+    );
 });
 
 var app = builder.Build();
 
 // ----------------------------------------------------
-// IMPORTANT: Forwarded Headers (Ingress / Reverse Proxy)
+// WICHTIG: Reverse Proxy / Ingress Support
 // ----------------------------------------------------
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -175,23 +179,26 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 // ----------------------------------------------------
-// Swagger (immer an – für Lehrer-Demo)
+// Development Mode
 // ----------------------------------------------------
-app.UseDeveloperExceptionPage();
-
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (/*app.Environment.IsDevelopment()*/ true)
 {
-    // wichtig: führender Slash
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        // ✅ FIX: Swagger JSON muss über /api/... kommen, sonst geht’s NICHT durch deinen Ingress
+        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AutoMind API v1");
 
-    // ClientId, mit dem du Token holst
-    c.OAuthClientId("automind-backend");
-    c.OAuthAppName("AutoMind Backend");
+        // Keycloak OAuth2 Settings für Swagger-Login
+        c.OAuthClientId("automind-swagger");
+        c.OAuthUsePkce();
+        c.OAuthAppName("AutoMind Backend");
 
-    // Optional: Autorisierung nach Refresh behalten
-    c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-});
+        // Authorization bleibt nach Refresh erhalten
+        c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+    });
+}
 
 // ----------------------------------------------------
 // DB Init (EnsureCreated + Seed)
