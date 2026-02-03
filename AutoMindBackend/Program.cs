@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -40,11 +41,11 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            // Audience-Check erstmal aus, damit der "empty audience"-Fehler weg ist
+
+            // Audience-Check aus (weil Keycloak je nach Client "aud" anders setzt)
             ValidateAudience = false,
-            // Username aus Keycloak
+
             NameClaimType = "preferred_username",
-            // Wir erzeugen eigene Role-Claims
             RoleClaimType = ClaimTypes.Role
         };
 
@@ -56,7 +57,7 @@ builder.Services
                 if (identity == null)
                     return Task.CompletedTask;
 
-                // ---------- Rollen aus realm_access.roles ----------
+                // Rollen aus realm_access.roles holen
                 var realmAccessClaim = context.Principal.FindFirst("realm_access");
                 if (realmAccessClaim?.Value is string realmAccessJson)
                 {
@@ -78,11 +79,11 @@ builder.Services
                     }
                     catch (JsonException)
                     {
-                        // ignorieren
+                        // ignorieren, falls Keycloak mal etwas Unerwartetes liefert
                     }
                 }
 
-                // ---------- Username als Name setzen ----------
+                // Username als Name setzen
                 var preferredUsername = context.Principal.FindFirst("preferred_username")?.Value;
                 if (!string.IsNullOrWhiteSpace(preferredUsername))
                 {
@@ -160,42 +161,37 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-    );
+              .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
 // ----------------------------------------------------
-// Development Mode
+// IMPORTANT: Forwarded Headers (Ingress / Reverse Proxy)
 // ----------------------------------------------------
-if (/*app.Environment.IsDevelopment()*/ true)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    app.UseDeveloperExceptionPage();
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
-    // ✅ WICHTIG: Swagger auf /api/swagger legen (damit es mit/ohne Ingress-Rewrite funktioniert)
-    app.UseSwagger(c =>
-    {
-        c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
-    });
+// ----------------------------------------------------
+// Swagger (immer an – für Lehrer-Demo)
+// ----------------------------------------------------
+app.UseDeveloperExceptionPage();
 
-    app.UseSwaggerUI(c =>
-    {
-        // UI wird unter /api/swagger erreichbar
-        c.RoutePrefix = "api/swagger";
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    // wichtig: führender Slash
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
 
-        // Swagger JSON liegt dann unter /api/swagger/v1/swagger.json
-        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AutoMind API v1");
+    // ClientId, mit dem du Token holst
+    c.OAuthClientId("automind-backend");
+    c.OAuthAppName("AutoMind Backend");
 
-        // Keycloak OAuth2 Settings für Swagger-Login
-        // (du nutzt eh automind-backend, damit du Tokens bekommst)
-        c.OAuthClientId("automind-backend");
-        c.OAuthAppName("AutoMind Backend");
-
-        // Authorization bleibt nach Refresh erhalten
-        c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-    });
-}
+    // Optional: Autorisierung nach Refresh behalten
+    c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+});
 
 // ----------------------------------------------------
 // DB Init (EnsureCreated + Seed)

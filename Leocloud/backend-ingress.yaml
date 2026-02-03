@@ -4,17 +4,18 @@ metadata:
   name: backend-ingress
   namespace: student-if220129
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
 spec:
+  ingressClassName: nginx
   rules:
     - host: if220129.cloud.htl-leonding.ac.at
       http:
         paths:
-          - path: /api
-            pathType: Prefix
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
-                name: backend-service
+                name: backend
                 port:
-                  number: 5191
+                  number: 8080
