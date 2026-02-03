@@ -32,6 +32,7 @@
     {
       "clientId": "automind-swagger",
       "enabled": true,
+      "secret": "dqqb6wD8kaMLCIKoIYjo2ZB6dRJQoIbU",
       "protocol": "openid-connect",
       "publicClient": true,
       "standardFlowEnabled": true,
