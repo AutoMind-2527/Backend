@@ -188,7 +188,7 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseSwaggerUI(c =>
     {
         // ✅ FIX: Swagger JSON muss über /api/... kommen, sonst geht’s NICHT durch deinen Ingress
-        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AutoMind API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
 
         // Keycloak OAuth2 Settings für Swagger-Login
         c.OAuthClientId("automind-swagger");
