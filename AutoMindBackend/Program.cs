@@ -206,7 +206,7 @@ if (/*app.Environment.IsDevelopment()*/ true)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 
     var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
     seeder.SeedData();

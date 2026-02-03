@@ -1,12 +1,5 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: backend-ingress
-  namespace: student-if220129
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
+  ingressClassName: nginx
   rules:
   - host: if220129.cloud.htl-leonding.ac.at
     http:

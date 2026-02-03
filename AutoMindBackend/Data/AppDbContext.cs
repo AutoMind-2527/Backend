@@ -59,7 +59,7 @@ public class AppDbContext : DbContext
             entity.Property(t => t.EndLocation).IsRequired().HasMaxLength(255);
             entity.Property(t => t.DistanceKm).IsRequired().HasColumnType("decimal(10,2)");
             entity.Property(t => t.StartTime).IsRequired();
-            entity.Property(t => t.EndTime).IsRequired();
+            entity.Property(t => t.EndTime).IsRequired(false);
 
             // Relationship mit User
             entity.HasOne(t => t.User)
