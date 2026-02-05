@@ -186,26 +186,15 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseDeveloperExceptionPage();
 
     app.UseSwagger();
-
     app.UseSwaggerUI(c =>
     {
         c.RoutePrefix = "swagger";
-
-        // wichtig: hinter /swagger soll er /swagger/v1/swagger.json holen
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
-
-        // OAuth darf bleiben
+        c.SwaggerEndpoint("v1/swagger.json", "AutoMind API v1");
         c.OAuthClientId("automind-swagger");
         c.OAuthUsePkce();
         c.OAuthAppName("AutoMind Backend");
-
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-
-        // NICHT MEHR:
-        // c.ConfigObject.AdditionalItems["servers"] = ...
     });
-
-
 }
 
 // ----------------------------------------------------
