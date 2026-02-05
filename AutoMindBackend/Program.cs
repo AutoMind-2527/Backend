@@ -186,22 +186,25 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseDeveloperExceptionPage();
 
     app.UseSwagger();
+
     app.UseSwaggerUI(c =>
     {
         c.RoutePrefix = "swagger";
 
-        // wichtig: NICHT /api/swagger/...
-        // relativ => wird zu /swagger/v1/swagger.json
-        c.SwaggerEndpoint("v1/swagger.json", "AutoMind API v1");
+        // wichtig: hinter /swagger soll er /swagger/v1/swagger.json holen
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoMind API v1");
 
-        // Keycloak OAuth2 Settings für Swagger-Login (kann bleiben)
+        // OAuth darf bleiben
         c.OAuthClientId("automind-swagger");
         c.OAuthUsePkce();
         c.OAuthAppName("AutoMind Backend");
 
-        // kann bleiben
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
+
+        // NICHT MEHR:
+        // c.ConfigObject.AdditionalItems["servers"] = ...
     });
+
 
 }
 
