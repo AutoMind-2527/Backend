@@ -184,22 +184,25 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 if (/*app.Environment.IsDevelopment()*/ true)
 {
     app.UseDeveloperExceptionPage();
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.RoutePrefix = "swagger"; // optional, aber sauber
+        c.RoutePrefix = "swagger";
 
-        // WICHTIG: relativ oder /swagger, aber NICHT /api/swagger
+        // wichtig: NICHT /api/swagger/...
+        // relativ => wird zu /swagger/v1/swagger.json
         c.SwaggerEndpoint("v1/swagger.json", "AutoMind API v1");
 
-        // Keycloak OAuth2 Settings für Swagger-Login
+        // Keycloak OAuth2 Settings für Swagger-Login (kann bleiben)
         c.OAuthClientId("automind-swagger");
         c.OAuthUsePkce();
         c.OAuthAppName("AutoMind Backend");
 
-        // Authorization bleibt nach Refresh erhalten
+        // kann bleiben
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
     });
+
 }
 
 // ----------------------------------------------------
