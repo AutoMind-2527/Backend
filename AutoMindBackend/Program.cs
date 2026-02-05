@@ -199,11 +199,6 @@ if (/*app.Environment.IsDevelopment()*/ true)
 
         // Authorization bleibt nach Refresh erhalten
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
-        c.ConfigObject.AdditionalItems["servers"] = new[]
-{
-    new { url = "https://if220129.cloud.htl-leonding.ac.at" }
-};
-
     });
 }
 
