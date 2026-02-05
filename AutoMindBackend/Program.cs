@@ -187,8 +187,10 @@ if (/*app.Environment.IsDevelopment()*/ true)
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        
-        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "AutoMind API v1");
+        c.RoutePrefix = "swagger"; // optional, aber sauber
+
+        // WICHTIG: relativ oder /swagger, aber NICHT /api/swagger
+        c.SwaggerEndpoint("v1/swagger.json", "AutoMind API v1");
 
         // Keycloak OAuth2 Settings für Swagger-Login
         c.OAuthClientId("automind-swagger");
