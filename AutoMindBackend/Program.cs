@@ -191,6 +191,7 @@ if (/*app.Environment.IsDevelopment()*/ true)
         c.RoutePrefix = "swagger";
         c.SwaggerEndpoint("v1/swagger.json", "AutoMind API v1");
         c.OAuthClientId("automind-backend");
+        c.OAuthClientSecret("dqqb6wD8kaMLCIKoIYjo2ZB6dRJQoIbU");
         c.OAuthUsePkce();
         c.OAuthAppName("AutoMind Backend");
         c.ConfigObject.AdditionalItems["persistAuthorization"] = true;
