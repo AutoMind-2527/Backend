@@ -12,7 +12,7 @@ public class AuditUserProvider : IAuditUserProvider
     }
 
     public string? GetUserId()
-        => _http.HttpContext?.User?.FindFirstValue("sub"); // Keycloak subject
+        => _http.HttpContext?.User?.FindFirstValue("sub");
 
     public string? GetUserName()
         => _http.HttpContext?.User?.Identity?.Name

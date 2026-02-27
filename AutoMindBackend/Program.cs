@@ -155,6 +155,8 @@ builder.Services.AddScoped<TripService>();
 builder.Services.AddScoped<GpsService>();
 builder.Services.AddScoped<UserSyncService>();
 builder.Services.AddScoped<DataSeeder>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuditUserProvider, AuditUserProvider>();
 
 // ----------------------------------------------------
 // CORS

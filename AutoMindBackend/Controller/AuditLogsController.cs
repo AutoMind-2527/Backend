@@ -7,7 +7,7 @@ namespace AutoMindBackend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")] // 🔥 nur Admin darf Logs sehen
+[Authorize(Roles = "Admin")] 
 public class AuditLogsController : ControllerBase
 {
     private readonly AppDbContext _context;
