@@ -9,6 +9,16 @@ public class Vehicle
     public int Mileage { get; set; }
     public double FuelConsumption { get; set; }
     
+    /// <summary>
+    /// Unique code to claim/link this tracker to a user account
+    /// </summary>
+    public string? TrackerCode { get; set; }
+    
+    /// <summary>
+    /// Whether this tracker has been claimed by a user
+    /// </summary>
+    public bool IsClaimed { get; set; } = false;
+    
     // Foreign Key
     public int UserId { get; set; }
     
@@ -28,4 +38,9 @@ public class VehicleUpdateDto
     public string Model { get; set; } = string.Empty;
     public int Mileage { get; set; }
     public double FuelConsumption { get; set; }
+}
+
+public class ClaimTrackerDto
+{
+    public string TrackerCode { get; set; } = string.Empty;
 }

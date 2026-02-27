@@ -109,6 +109,11 @@ public class AppDbContext : DbContext
             entity.Property(v => v.Model).IsRequired().HasMaxLength(50);
             entity.Property(v => v.Mileage).IsRequired();
             entity.Property(v => v.FuelConsumption).IsRequired().HasColumnType("decimal(5,2)");
+            entity.Property(v => v.TrackerCode).HasMaxLength(50);
+            entity.Property(v => v.IsClaimed).IsRequired().HasDefaultValue(false);
+
+            // Unique index on TrackerCode
+            entity.HasIndex(v => v.TrackerCode).IsUnique();
 
             // Relationship mit User
             entity.HasOne(v => v.User)

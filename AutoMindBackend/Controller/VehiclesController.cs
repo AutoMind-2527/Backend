@@ -136,6 +136,22 @@ public class VehiclesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    // POST /api/Vehicles/claim
+    [HttpPost("claim")]
+    [Authorize(Roles = "Admin,User")]
+    public async Task<IActionResult> ClaimTracker([FromBody] ClaimTrackerDto dto)
+    {
+        await _userSyncService.SyncUserFromKeycloak(User);
+        var user = await _userSyncService.GetUserFromKeycloak(User);
+
+        var claimed = _service.ClaimTracker(dto.TrackerCode, user.Id);
+        
+        if (claimed == null)
+            return NotFound(new { message = "Tracker not found or already claimed" });
+
+        return Ok(new { message = "Tracker claimed successfully", vehicle = claimed });
+    }
+
     // PUT /api/Vehicles/{id}
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,User")]

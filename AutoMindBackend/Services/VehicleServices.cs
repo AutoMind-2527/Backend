@@ -177,4 +177,22 @@ public class VehicleService
             FuelConsumption = vehicle.FuelConsumption
         };
     }
+
+    /// <summary>
+    /// Claim a tracker using its unique code and assign it to the user
+    /// </summary>
+    public Vehicle? ClaimTracker(string trackerCode, int userId)
+    {
+        var vehicle = _context.Vehicles
+            .FirstOrDefault(v => v.TrackerCode == trackerCode && !v.IsClaimed);
+
+        if (vehicle == null)
+            return null; // Tracker not found or already claimed
+
+        vehicle.UserId = userId;
+        vehicle.IsClaimed = true;
+        _context.SaveChanges();
+
+        return vehicle;
+    }
 }
