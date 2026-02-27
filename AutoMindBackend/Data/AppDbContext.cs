@@ -1,18 +1,84 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using AutoMindBackend.Models;
+using AutoMindBackend.Services;
+
 
 namespace AutoMindBackend.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    private readonly IAuditUserProvider? _auditUserProvider;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, IAuditUserProvider? auditUserProvider = null)
+        : base(options)
     {
+        _auditUserProvider = auditUserProvider;
     }
 
-    // DbSets
     public DbSet<User> Users { get; set; }
     public DbSet<Vehicle> Vehicles { get; set; }
     public DbSet<Trip> Trips { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var auditEntries = CreateAuditEntries();
+
+        // 1) normale Änderungen speichern
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // 2) danach audit logs speichern (damit IDs etc. schon existieren)
+        if (auditEntries.Count > 0)
+        {
+            AuditLogs.AddRange(auditEntries);
+            await base.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
+    }
+
+    private List<AuditLog> CreateAuditEntries()
+    {
+        ChangeTracker.DetectChanges();
+
+        var audits = new List<AuditLog>();
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is AuditLog) continue;
+            if (entry.State is EntityState.Detached or EntityState.Unchanged) continue;
+
+            var audit = new AuditLog
+            {
+                EntityName = entry.Metadata.ClrType.Name,
+                Action = entry.State.ToString(),
+                Timestamp = DateTime.UtcNow,
+                UserId = _auditUserProvider?.GetUserId(),
+                UserName = _auditUserProvider?.GetUserName(),
+                IpAddress = _auditUserProvider?.GetIpAddress()
+            };
+
+            if (entry.State == EntityState.Added)
+            {
+                audit.NewValues = JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+            }
+            else if (entry.State == EntityState.Deleted)
+            {
+                audit.OldValues = JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                audit.OldValues = JsonSerializer.Serialize(entry.OriginalValues.ToObject());
+                audit.NewValues = JsonSerializer.Serialize(entry.CurrentValues.ToObject());
+            }
+
+            audits.Add(audit);
+        }
+
+        return audits;
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
