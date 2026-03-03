@@ -223,7 +223,18 @@ namespace AutoMindBackend.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsClaimed")
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("TrackerCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TrackerCode")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
