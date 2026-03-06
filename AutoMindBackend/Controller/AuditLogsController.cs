@@ -22,7 +22,7 @@ public class AuditLogsController : ControllerBase
     {
         var logs = await _context.AuditLogs
             .OrderByDescending(a => a.Timestamp)
-            .Take(200) // nicht alles laden
+            .Take(200) 
             .ToListAsync();
 
         return Ok(logs);
