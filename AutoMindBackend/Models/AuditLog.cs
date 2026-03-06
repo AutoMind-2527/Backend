@@ -16,6 +16,7 @@ public class AuditLog
     [JsonIgnore]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
+    [JsonPropertyName("timestamp")]
     public string TimeStampFormatted => Timestamp.ToString("dd-MM-yyyy HH:mm");
 
     public string? IpAddress { get; set; }
