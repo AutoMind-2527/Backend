@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using AutoMindBackend.Services;
+using AutoMindBackend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace AutoMindBackend.Controllers;
 
@@ -10,10 +12,12 @@ namespace AutoMindBackend.Controllers;
 public class GpsController : ControllerBase
 {
     private readonly GpsService _gpsService;
+    private readonly AppDbContext _context;
 
-    public GpsController(GpsService gpsService)
+    public GpsController(GpsService gpsService, AppDbContext context)
     {
         _gpsService = gpsService;
+        _context = context;
     }
 
     /// <summary>
@@ -34,6 +38,38 @@ public class GpsController : ControllerBase
         );
 
         return Ok(new { message = "GPS point stored" });
+    }
+
+    /// <summary>
+    /// Raspberry Pi/IoT device sends GPS data using tracker code (no user auth required).
+    /// TODO: Consider adding API key authentication for production security.
+    /// </summary>
+    [HttpPost("byTracker")]
+    [AllowAnonymous] // No user authentication required - Pi sends with tracker code
+    public async Task<IActionResult> PushGpsPointByTracker([FromBody] GpsPointByTrackerDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // Look up vehicle by tracker code
+        var vehicle = await _context.Vehicles
+            .FirstOrDefaultAsync(v => v.TrackerCode == dto.TrackerCode);
+
+        if (vehicle == null)
+            return NotFound(new { error = "Tracker code not found" });
+
+        if (!vehicle.IsClaimed)
+            return BadRequest(new { error = "Tracker not yet claimed by a user" });
+
+        // Send GPS data to the vehicle
+        await _gpsService.AddGpsPointAsync(
+            vehicle.Id,
+            dto.Latitude,
+            dto.Longitude,
+            dto.SpeedKmh
+        );
+
+        return Ok(new { message = "GPS point stored", vehicleId = vehicle.Id });
     }
 
     /// <summary>
@@ -70,6 +106,17 @@ public class GpsController : ControllerBase
 public class GpsPointCreateDto
 {
     public int VehicleId { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public double? SpeedKmh { get; set; }
+}
+
+/// <summary>
+/// DTO for Raspberry Pi/IoT devices that send GPS data using tracker code.
+/// </summary>
+public class GpsPointByTrackerDto
+{
+    public string TrackerCode { get; set; } = string.Empty;
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     public double? SpeedKmh { get; set; }
