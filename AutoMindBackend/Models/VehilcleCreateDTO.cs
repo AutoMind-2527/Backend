@@ -7,4 +7,9 @@ public class VehicleCreateDto
     public string Model { get; set; } = string.Empty;
     public int Mileage { get; set; }
     public double FuelConsumption { get; set; }
+    
+    /// <summary>
+    /// Optional: Unique tracker code for Raspberry Pi GPS devices
+    /// </summary>
+    public string? TrackerCode { get; set; }
 }

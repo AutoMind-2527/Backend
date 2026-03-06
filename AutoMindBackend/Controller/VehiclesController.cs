@@ -129,6 +129,8 @@ public class VehiclesController : ControllerBase
             Model = dto.Model,
             Mileage = dto.Mileage,
             FuelConsumption = dto.FuelConsumption,
+            TrackerCode = dto.TrackerCode,  // Optional: for Raspberry Pi devices
+            IsClaimed = string.IsNullOrEmpty(dto.TrackerCode), // If no tracker code, claim immediately
             UserId = user.Id    // WICHTIG: Besitzer setzen
         };
 
