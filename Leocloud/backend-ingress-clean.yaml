@@ -12,14 +12,14 @@ spec:
     - host: if220129.cloud.htl-leonding.ac.at
       http:
         paths:
-          - path: /api
+          - path: /swagger
             pathType: Prefix
             backend:
               service:
                 name: backend-service
                 port:
                   number: 5191
-          - path: /swagger
+          - path: /
             pathType: Prefix
             backend:
               service:
