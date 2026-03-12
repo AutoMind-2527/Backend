@@ -1,6 +1,7 @@
 {
   "realm": "automind-realm",
   "enabled": true,
+  "loginTheme": "automind",
 
   "roles": {
     "realm": [
