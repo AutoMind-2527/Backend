@@ -18,7 +18,7 @@ spec:
           image: ghcr.io/automind-2527/backend:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 5191
           env:
             - name: DOTNET_USE_POLLING_FILE_WATCHER
               value: "1"
@@ -33,10 +33,10 @@ metadata:
   name: backend-service
   namespace: student-if220129
 spec:
-  type: ClusterIP        # bleibt intern im Cluster
+  type: ClusterIP
   selector:
     app: backend
   ports:
-    - port: 5191         # Port im Cluster
-      targetPort: 5191   # Port im Container
-
+    - port: 5191
+      targetPort: 5191
+      protocol: TCP
