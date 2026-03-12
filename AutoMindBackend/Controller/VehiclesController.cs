@@ -122,6 +122,9 @@ public class VehiclesController : ControllerBase
         await _userSyncService.SyncUserFromKeycloak(User);
         var user = await _userSyncService.GetUserFromKeycloak(User);
 
+        var hasTrackerCode = !string.IsNullOrWhiteSpace(dto.TrackerCode);
+        var shouldCreateUnclaimedTracker = User.IsInRole("Admin") && hasTrackerCode;
+
         var vehicle = new Vehicle
         {
             LicensePlate = dto.LicensePlate,
@@ -130,8 +133,10 @@ public class VehiclesController : ControllerBase
             Mileage = dto.Mileage,
             FuelConsumption = dto.FuelConsumption,
             TrackerCode = dto.TrackerCode,  // Optional: for Raspberry Pi devices
-            IsClaimed = string.IsNullOrEmpty(dto.TrackerCode), // If no tracker code, claim immediately
-            UserId = user.Id    // WICHTIG: Besitzer setzen
+            // Users creating their own vehicle with a tracker should immediately own it.
+            // Admins can still pre-provision tracker vehicles that are claimed later.
+            IsClaimed = !shouldCreateUnclaimedTracker,
+            UserId = user.Id
         };
 
         var created = _service.Add(vehicle);
